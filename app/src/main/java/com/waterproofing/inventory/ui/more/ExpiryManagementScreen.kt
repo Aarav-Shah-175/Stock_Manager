@@ -26,6 +26,7 @@ fun ExpiryManagementScreen(
 ) {
     val expired by viewModel.expiredBatches.collectAsState()
     val expiringSoon by viewModel.expiringSoonBatches.collectAsState()
+    val warningDays by viewModel.expiryWarningDays.collectAsState()
 
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Expiring Soon (${expiringSoon.size})", "Expired (${expired.size})")
@@ -58,7 +59,7 @@ fun ExpiryManagementScreen(
             if (currentList.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        if (selectedTab == 0) "No batches expiring within 90 days." else "No expired batches with remaining stock.",
+                        if (selectedTab == 0) "No batches expiring within $warningDays days." else "No expired batches with remaining stock.",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.outline
                     )

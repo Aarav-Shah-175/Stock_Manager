@@ -32,9 +32,9 @@ fun AddStockScreen(
     var selectedVariant by remember { mutableStateOf<VariantWithStock?>(null) }
     var selectedBatch by remember { mutableStateOf<BatchWithProductInfo?>(null) }
 
+    var productSearchQuery by remember { mutableStateOf("") }
     var quantityStr by remember { mutableStateOf("") }
     var reason by remember { mutableStateOf("Received") }
-    var invoiceNumber by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
 
     var productExpanded by remember { mutableStateOf(false) }
@@ -45,6 +45,23 @@ fun AddStockScreen(
     var successMessage by remember { mutableStateOf<String?>(null) }
 
     val sdf = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
+
+    // Sync search query when selectedProduct changes
+    LaunchedEffect(selectedProduct) {
+        productSearchQuery = selectedProduct?.let { "${it.name} — ${it.brand}" } ?: ""
+    }
+
+    val filteredProducts = remember(products, productSearchQuery, selectedProduct) {
+        val selectedName = selectedProduct?.let { "${it.name} — ${it.brand}" } ?: ""
+        if (productSearchQuery == selectedName) {
+            products
+        } else {
+            products.filter {
+                it.name.contains(productSearchQuery, ignoreCase = true) ||
+                it.brand.contains(productSearchQuery, ignoreCase = true)
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -68,28 +85,44 @@ fun AddStockScreen(
         ) {
             Text("Select Product, Variant & Batch", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 
-            // Product dropdown
-            ExposedDropdownMenuBox(expanded = productExpanded, onExpandedChange = { productExpanded = !productExpanded }) {
+            // Product autocomplete/search dropdown
+            ExposedDropdownMenuBox(
+                expanded = productExpanded,
+                onExpandedChange = { productExpanded = it }
+            ) {
                 OutlinedTextField(
-                    readOnly = true,
-                    value = selectedProduct?.name ?: "Select Product",
-                    onValueChange = {},
-                    label = { Text("Product*") },
+                    value = productSearchQuery,
+                    onValueChange = {
+                        productSearchQuery = it
+                        productExpanded = true
+                        if (it.isBlank()) {
+                            selectedProduct = null
+                            selectedVariant = null
+                            selectedBatch = null
+                            viewModel.selectProduct(null)
+                        }
+                    },
+                    label = { Text("Product* (Searchable)") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = productExpanded) },
                     modifier = Modifier.fillMaxWidth().menuAnchor()
                 )
-                ExposedDropdownMenu(expanded = productExpanded, onDismissRequest = { productExpanded = false }) {
-                    products.forEach { product ->
-                        DropdownMenuItem(
-                            text = { Text("${product.name} — ${product.brand}") },
-                            onClick = {
-                                selectedProduct = product
-                                selectedVariant = null
-                                selectedBatch = null
-                                viewModel.selectProduct(product.id)
-                                productExpanded = false
-                            }
-                        )
+                if (filteredProducts.isNotEmpty()) {
+                    ExposedDropdownMenu(
+                        expanded = productExpanded,
+                        onDismissRequest = { productExpanded = false }
+                    ) {
+                        filteredProducts.forEach { product ->
+                            DropdownMenuItem(
+                                text = { Text("${product.name} — ${product.brand}") },
+                                onClick = {
+                                    selectedProduct = product
+                                    selectedVariant = null
+                                    selectedBatch = null
+                                    viewModel.selectProduct(product.id)
+                                    productExpanded = false
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -167,14 +200,6 @@ fun AddStockScreen(
             )
 
             OutlinedTextField(
-                value = invoiceNumber,
-                onValueChange = { invoiceNumber = it },
-                label = { Text("Invoice Number (Optional)") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
                 value = notes,
                 onValueChange = { notes = it },
                 label = { Text("Notes (Optional)") },
@@ -206,14 +231,13 @@ fun AddStockScreen(
                                 quantity = qty,
                                 unit = variant?.unit ?: batch.unit,
                                 reason = reason,
-                                invoiceNumber = invoiceNumber,
+                                invoiceNumber = null,
                                 notes = notes
                             ) { result ->
                                 when (result) {
                                     is StockOperationResult.Success -> {
                                         successMessage = "✓ Stock added successfully."
                                         quantityStr = ""
-                                        invoiceNumber = ""
                                         notes = ""
                                     }
                                     is StockOperationResult.Error -> errorMessage = result.message

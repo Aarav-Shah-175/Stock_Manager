@@ -37,4 +37,8 @@ class BatchRepository(private val batchDao: BatchDao) {
     suspend fun updateBatch(batch: BatchEntity) = batchDao.update(batch.copy(
         updatedAt = System.currentTimeMillis()
     ))
+
+    suspend fun deleteBatch(batchId: Long) {
+        batchDao.deleteBatch(batchId)
+    }
 }

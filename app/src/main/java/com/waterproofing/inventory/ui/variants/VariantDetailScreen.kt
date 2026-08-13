@@ -10,6 +10,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
@@ -42,6 +43,9 @@ fun VariantDetailScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var batchToEdit by remember { mutableStateOf<BatchWithProductInfo?>(null) }
 
+    var showDeleteVariantDialog by remember { mutableStateOf(false) }
+    var batchToDelete by remember { mutableStateOf<BatchWithProductInfo?>(null) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -51,6 +55,15 @@ fun VariantDetailScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showDeleteVariantDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete Variant",
+                            tint = MaterialTheme.colorScheme.error
                         )
                     }
                 }
@@ -84,13 +97,6 @@ fun VariantDetailScreen(
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold
                         )
-                        v.sku?.let {
-                            Text(
-                                text = "SKU: $it",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.outline
-                            )
-                        }
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -113,7 +119,7 @@ fun VariantDetailScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Inventory Batches (FEFO Sorted)",
+                text = "Inventory Batches",
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
@@ -142,7 +148,8 @@ fun VariantDetailScreen(
                     items(batches, key = { it.id }) { batch ->
                         BatchCardItem(
                             batch = batch,
-                            onEdit = { batchToEdit = batch }
+                            onEdit = { batchToEdit = batch },
+                            onDelete = { batchToDelete = batch }
                         )
                     }
                 }
@@ -183,13 +190,66 @@ fun VariantDetailScreen(
                 }
             )
         }
+
+        // Delete Variant Dialog
+        if (showDeleteVariantDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteVariantDialog = false },
+                title = { Text("Delete Variant") },
+                text = { Text("Are you sure you want to delete this variant? All associated batches and transaction history for this variant will be permanently deleted.") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showDeleteVariantDialog = false
+                            viewModel.deleteVariant {
+                                onBack()
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteVariantDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+
+        // Delete Batch Dialog
+        batchToDelete?.let { batch ->
+            AlertDialog(
+                onDismissRequest = { batchToDelete = null },
+                title = { Text("Delete Batch") },
+                text = { Text("Are you sure you want to delete batch \"${batch.batchNumber}\"? All associated transactions for this batch will be permanently deleted.") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            viewModel.deleteBatch(batch.id)
+                            batchToDelete = null
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { batchToDelete = null }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
     }
 }
 
 @Composable
 fun BatchCardItem(
     batch: BatchWithProductInfo,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
 ) {
     val expiryStatus = ExpiryCalculator.getStatus(batch.expiryDate)
     val sdf = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
@@ -230,8 +290,17 @@ fun BatchCardItem(
                     )
                 }
 
-                IconButton(onClick = onEdit) {
-                    Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit Batch")
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onEdit) {
+                        Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit Batch")
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete Batch",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             }
 
@@ -338,7 +407,7 @@ fun BatchAddEditDialog(
         notes: String?
     ) -> Unit
 ) {
-    var batchNumber by remember { mutableStateOf(batch?.batchNumber ?: "") }
+    val batchNumber = remember { batch?.batchNumber ?: "B-${SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())}" }
     var quantityStr by remember { mutableStateOf(batch?.currentQuantity?.toString() ?: "") }
 
     var mfgDate by remember { mutableStateOf(batch?.mfgDate) }
@@ -348,9 +417,6 @@ fun BatchAddEditDialog(
     var expiryDate by remember { mutableStateOf(batch?.expiryDate ?: System.currentTimeMillis()) }
     var isManualExpiry by remember { mutableStateOf(batch != null && batch.shelfLifeValue == null) }
 
-    var purchasePriceStr by remember { mutableStateOf(batch?.purchasePrice?.toString() ?: "") }
-    var supplier by remember { mutableStateOf(batch?.supplier ?: "") }
-    var invoiceNumber by remember { mutableStateOf(batch?.invoiceNumber ?: "") }
     var notes by remember { mutableStateOf(batch?.notes ?: "") }
 
     val sdf = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
@@ -380,14 +446,6 @@ fun BatchAddEditDialog(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 OutlinedTextField(
-                    value = batchNumber,
-                    onValueChange = { batchNumber = it },
-                    label = { Text("Batch Number*") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                OutlinedTextField(
                     value = quantityStr,
                     onValueChange = { quantityStr = it },
                     label = { Text("Current Quantity*") },
@@ -416,16 +474,20 @@ fun BatchAddEditDialog(
                 }
 
                 // MFG Date picker
-                OutlinedTextField(
-                    value = mfgDate?.let { sdf.format(Date(it)) } ?: "Not Set",
-                    onValueChange = {},
-                    label = { Text("Manufacturing Date") },
-                    readOnly = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { showMfgPicker = true },
-                    enabled = true
-                )
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = mfgDate?.let { sdf.format(Date(it)) } ?: "Not Set",
+                        onValueChange = {},
+                        label = { Text("Manufacturing Date") },
+                        readOnly = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { showMfgPicker = true }
+                    )
+                }
 
                 if (!isManualExpiry) {
                     Row(
@@ -450,8 +512,11 @@ fun BatchAddEditDialog(
                                 readOnly = true,
                                 label = { Text("Unit") },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
+                                    .matchParentSize()
                                     .clickable { dropdownExpanded = true }
                             )
                             DropdownMenu(
@@ -473,19 +538,26 @@ fun BatchAddEditDialog(
                 }
 
                 // Expiry Date picker
-                OutlinedTextField(
-                    value = sdf.format(Date(expiryDate)),
-                    onValueChange = {},
-                    label = { Text("Expiry Date*") },
-                    readOnly = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(enabled = isManualExpiry) { showExpPicker = true },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
-                    ),
-                    enabled = isManualExpiry
-                )
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = sdf.format(Date(expiryDate)),
+                        onValueChange = {},
+                        label = { Text("Expiry Date*") },
+                        readOnly = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                        ),
+                        enabled = isManualExpiry
+                    )
+                    if (isManualExpiry) {
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clickable { showExpPicker = true }
+                        )
+                    }
+                }
 
                 if (!isManualExpiry && mfgDate != null && shelfLifeValueStr.toIntOrNull() != null) {
                     Text(
@@ -497,45 +569,10 @@ fun BatchAddEditDialog(
 
                 HorizontalDivider()
 
-                Text(
-                    text = "Supplier & Purchasing (Optional)",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold
-                )
-
-                OutlinedTextField(
-                    value = supplier,
-                    onValueChange = { supplier = it },
-                    label = { Text("Supplier") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedTextField(
-                        value = purchasePriceStr,
-                        onValueChange = { purchasePriceStr = it },
-                        label = { Text("Purchase Price") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        singleLine = true,
-                        modifier = Modifier.weight(1f)
-                    )
-                    OutlinedTextField(
-                        value = invoiceNumber,
-                        onValueChange = { invoiceNumber = it },
-                        label = { Text("Invoice Number") },
-                        singleLine = true,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = { Text("Notes / Remarks") },
+                    label = { Text("Notes / Remarks (Optional)") },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -545,7 +582,6 @@ fun BatchAddEditDialog(
                 onClick = {
                     val qty = quantityStr.toDoubleOrNull() ?: 0.0
                     val slVal = shelfLifeValueStr.toIntOrNull()
-                    val price = purchasePriceStr.toDoubleOrNull()
 
                     if (batchNumber.isNotBlank() && qty > 0.0) {
                         onConfirm(
@@ -555,9 +591,9 @@ fun BatchAddEditDialog(
                             if (isManualExpiry) null else slVal,
                             if (isManualExpiry) null else shelfLifeUnit,
                             expiryDate,
-                            price,
-                            supplier,
-                            invoiceNumber,
+                            batch?.purchasePrice,
+                            batch?.supplier,
+                            batch?.invoiceNumber,
                             notes
                         )
                     }

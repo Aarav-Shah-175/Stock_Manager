@@ -23,11 +23,11 @@ fun TransactionHistoryScreen(
 ) {
     val transactions by viewModel.allTransactions.collectAsState()
 
-    // Filter state: "ALL", "IN", "OUT", "ADJUSTMENT"
+    // Filter state: "ALL", "IN", "OUT"
     var filterType by remember { mutableStateOf("ALL") }
-    val tabs = listOf("ALL", "IN", "OUT", "ADJUSTMENT")
+    val tabs = listOf("ALL", "IN", "OUT")
 
-    val filtered = if (filterType == "ALL") transactions
+    val filtered = if (filterType == "ALL") transactions.filter { it.transactionType != "ADJUSTMENT" }
     else transactions.filter { it.transactionType == filterType }
 
     Scaffold(

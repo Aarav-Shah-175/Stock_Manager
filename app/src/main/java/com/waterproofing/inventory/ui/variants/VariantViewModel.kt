@@ -113,4 +113,18 @@ class VariantViewModel(
             batchRepository.updateBatch(updated)
         }
     }
+
+    fun deleteVariant(onSuccess: () -> Unit) {
+        val vid = variantIdState.value ?: return
+        viewModelScope.launch {
+            variantRepository.deleteVariant(vid)
+            onSuccess()
+        }
+    }
+
+    fun deleteBatch(batchId: Long) {
+        viewModelScope.launch {
+            batchRepository.deleteBatch(batchId)
+        }
+    }
 }

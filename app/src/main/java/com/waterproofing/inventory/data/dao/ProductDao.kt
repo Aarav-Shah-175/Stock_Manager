@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.waterproofing.inventory.data.entity.ProductEntity
 import com.waterproofing.inventory.data.model.ProductWithCategory
@@ -13,6 +14,18 @@ import kotlinx.coroutines.flow.Flow
 interface ProductDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(product: ProductEntity): Long
+
+    @Query("DELETE FROM stock_transactions WHERE product_id = :productId")
+    suspend fun deleteTransactionsByProductId(productId: Long)
+
+    @Query("DELETE FROM products WHERE id = :productId")
+    suspend fun deleteProductByIdOnly(productId: Long)
+
+    @Transaction
+    suspend fun deleteProduct(productId: Long) {
+        deleteTransactionsByProductId(productId)
+        deleteProductByIdOnly(productId)
+    }
 
     @Update
     suspend fun update(product: ProductEntity)
@@ -68,7 +81,6 @@ interface ProductDao {
                OR p.description LIKE :query
                OR c.name LIKE :query 
                OR v.name LIKE :query 
-               OR v.sku LIKE :query 
                OR b.batch_number LIKE :query)
         ORDER BY p.name ASC
     """)

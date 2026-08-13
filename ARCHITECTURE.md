@@ -46,7 +46,6 @@ Room DAOs & SQLite Database
 - `name` (String)
 - `quantity_value` (Double)
 - `unit` (String)
-- `sku` (String?, Index)
 - `min_stock_threshold` (Double, Default: 0.0)
 - `is_archived` (Boolean, Default: false)
 - `created_at` (Long)

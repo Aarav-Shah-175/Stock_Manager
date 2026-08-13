@@ -1,5 +1,7 @@
 package com.waterproofing.inventory.ui.navigation
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -40,6 +42,8 @@ import com.waterproofing.inventory.ui.more.CategoryViewModel
 import com.waterproofing.inventory.ui.more.ExpiryManagementScreen
 import com.waterproofing.inventory.ui.more.LowStockScreen
 import com.waterproofing.inventory.ui.more.MoreScreen
+import com.waterproofing.inventory.ui.more.SettingsScreen
+import com.waterproofing.inventory.ui.more.SettingsViewModel
 import com.waterproofing.inventory.ui.products.ProductDetailScreen
 import com.waterproofing.inventory.ui.products.ProductDetailViewModel
 import com.waterproofing.inventory.ui.products.ProductListScreen
@@ -71,7 +75,8 @@ fun MainAppNavigation() {
             app.productRepository,
             app.variantRepository,
             app.batchRepository,
-            app.transactionRepository
+            app.transactionRepository,
+            app.settingsRepository
         )
     }
 
@@ -81,6 +86,7 @@ fun MainAppNavigation() {
     val variantViewModel: VariantViewModel = viewModel(factory = factory)
     val stockViewModel: StockViewModel = viewModel(factory = factory)
     val dashboardViewModel: DashboardViewModel = viewModel(factory = factory)
+    val settingsViewModel: SettingsViewModel = viewModel(factory = factory)
 
     val items = listOf(
         NavigationItem.Dashboard,
@@ -122,7 +128,11 @@ fun MainAppNavigation() {
         NavHost(
             navController = navController,
             startDestination = Screen.Dashboard.route,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None }
         ) {
             composable(Screen.Dashboard.route) {
                 DashboardScreen(
@@ -225,7 +235,10 @@ fun MainAppNavigation() {
                 BackupRestoreScreen(onBack = { navController.popBackStack() })
             }
             composable(Screen.Settings.route) {
-                PlaceholderScreen(title = "Settings", onBack = { navController.popBackStack() })
+                SettingsScreen(
+                    viewModel = settingsViewModel,
+                    onBack = { navController.popBackStack() }
+                )
             }
         }
     }

@@ -82,6 +82,9 @@ dependencies {
     // Gson (Backup and Restore JSON parsing)
     implementation("com.google.code.gson:gson:2.10.1")
 
+    // WorkManager (Expiry notifications background worker)
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+
     // Local JVM & Instrumentation Tests
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

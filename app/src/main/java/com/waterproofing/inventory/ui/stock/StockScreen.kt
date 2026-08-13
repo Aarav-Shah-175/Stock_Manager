@@ -54,7 +54,7 @@ fun StockScreen(
             StockOperationCard(
                 icon = { Icon(Icons.Default.Remove, contentDescription = null, modifier = Modifier.size(32.dp)) },
                 title = "Stock OUT",
-                subtitle = "Issue or sell from FEFO-suggested batch",
+                subtitle = "Issue or sell goods from a batch",
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                 onClick = onNavigateToRemoveStock

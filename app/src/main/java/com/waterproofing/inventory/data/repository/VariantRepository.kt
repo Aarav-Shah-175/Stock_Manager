@@ -27,7 +27,6 @@ class VariantRepository(private val variantDao: VariantDao) {
         name: String,
         quantityValue: Double,
         unit: String,
-        sku: String?,
         minStockThreshold: Double
     ): Long {
         return variantDao.insert(
@@ -36,7 +35,6 @@ class VariantRepository(private val variantDao: VariantDao) {
                 name = name.trim(),
                 quantityValue = quantityValue,
                 unit = unit.trim(),
-                sku = sku?.trim()?.takeIf { it.isNotEmpty() },
                 minStockThreshold = minStockThreshold
             )
         )
@@ -47,7 +45,6 @@ class VariantRepository(private val variantDao: VariantDao) {
             variant.copy(
                 name = variant.name.trim(),
                 unit = variant.unit.trim(),
-                sku = variant.sku?.trim()?.takeIf { it.isNotEmpty() },
                 updatedAt = System.currentTimeMillis()
             )
         )
@@ -59,5 +56,9 @@ class VariantRepository(private val variantDao: VariantDao) {
 
     suspend fun restoreVariant(variantId: Long) {
         variantDao.updateArchiveStatus(variantId, isArchived = false)
+    }
+
+    suspend fun deleteVariant(variantId: Long) {
+        variantDao.deleteVariant(variantId)
     }
 }

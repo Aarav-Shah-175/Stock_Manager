@@ -6,7 +6,6 @@ data class VariantWithStock(
     val name: String,
     val quantityValue: Double,
     val unit: String,
-    val sku: String?,
     val minStockThreshold: Double,
     val isArchived: Boolean,
     val createdAt: Long,

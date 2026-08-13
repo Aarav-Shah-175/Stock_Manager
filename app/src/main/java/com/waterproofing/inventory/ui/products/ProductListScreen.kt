@@ -99,7 +99,7 @@ fun ProductListScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { viewModel.updateSearchQuery(it) },
-                placeholder = { Text("Search by name, brand, category, SKU, batch...") },
+                placeholder = { Text("Search by name, brand, category, batch...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 singleLine = true,
                 modifier = Modifier

@@ -18,10 +18,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -69,6 +71,8 @@ fun ProductDetailScreen(
     var variantToEdit by remember { mutableStateOf<VariantWithStock?>(null) }
     var variantToArchive by remember { mutableStateOf<VariantWithStock?>(null) }
 
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -78,6 +82,15 @@ fun ProductDetailScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showDeleteDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete Product",
+                            tint = MaterialTheme.colorScheme.error
                         )
                     }
                 }
@@ -184,8 +197,8 @@ fun ProductDetailScreen(
         if (showAddDialog) {
             VariantAddEditDialog(
                 onDismiss = { showAddDialog = false },
-                onConfirm = { name, qValue, unit, sku, threshold ->
-                    viewModel.addVariant(name, qValue, unit, sku, threshold)
+                onConfirm = { name, qValue, unit, threshold ->
+                    viewModel.addVariant(name, qValue, unit, threshold)
                     showAddDialog = false
                 }
             )
@@ -196,7 +209,7 @@ fun ProductDetailScreen(
             VariantAddEditDialog(
                 variant = variant,
                 onDismiss = { variantToEdit = null },
-                onConfirm = { name, qValue, unit, sku, threshold ->
+                onConfirm = { name, qValue, unit, threshold ->
                     viewModel.updateVariant(
                         VariantEntity(
                             id = variant.id,
@@ -204,7 +217,6 @@ fun ProductDetailScreen(
                             name = name,
                             quantityValue = qValue,
                             unit = unit,
-                            sku = sku,
                             minStockThreshold = threshold,
                             isArchived = variant.isArchived,
                             createdAt = variant.createdAt
@@ -233,6 +245,33 @@ fun ProductDetailScreen(
                 },
                 dismissButton = {
                     TextButton(onClick = { variantToArchive = null }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+
+        // Delete Product Dialog
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = { Text("Delete Product") },
+                text = { Text("Are you sure you want to delete this product? All variants, batches, and transactions for this product will be permanently deleted.") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showDeleteDialog = false
+                            viewModel.deleteProduct {
+                                onBack()
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteDialog = false }) {
                         Text("Cancel")
                     }
                 }
@@ -276,13 +315,6 @@ fun VariantCardItem(
                         fontWeight = FontWeight.Bold,
                         color = if (isLowStock) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSurface
                     )
-                    variant.sku?.let {
-                        Text(
-                            text = "SKU: $it",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = if (isLowStock) MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.outline
-                        )
-                    }
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -353,12 +385,11 @@ fun VariantCardItem(
 fun VariantAddEditDialog(
     variant: VariantWithStock? = null,
     onDismiss: () -> Unit,
-    onConfirm: (String, Double, String, String?, Double) -> Unit
+    onConfirm: (name: String, quantityValue: Double, unit: String, minStockThreshold: Double) -> Unit
 ) {
     var name by remember { mutableStateOf(variant?.name ?: "") }
     var qValueStr by remember { mutableStateOf(variant?.quantityValue?.toString() ?: "") }
     var unit by remember { mutableStateOf(variant?.unit ?: "") }
-    var sku by remember { mutableStateOf(variant?.sku ?: "") }
     var thresholdStr by remember { mutableStateOf(variant?.minStockThreshold?.toString() ?: "") }
 
     AlertDialog(
@@ -395,13 +426,6 @@ fun VariantAddEditDialog(
                     )
                 }
                 OutlinedTextField(
-                    value = sku,
-                    onValueChange = { sku = it },
-                    label = { Text("SKU / Code") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
                     value = thresholdStr,
                     onValueChange = { thresholdStr = it },
                     label = { Text("Min Stock Alert Threshold (units)") },
@@ -417,7 +441,7 @@ fun VariantAddEditDialog(
                     val qValue = qValueStr.toDoubleOrNull() ?: 0.0
                     val threshold = thresholdStr.toDoubleOrNull() ?: 0.0
                     if (name.isNotBlank() && unit.isNotBlank() && qValue > 0.0) {
-                        onConfirm(name, qValue, unit, sku.trim().takeIf { it.isNotEmpty() }, threshold)
+                        onConfirm(name, qValue, unit, threshold)
                     }
                 }
             ) {

@@ -35,6 +35,7 @@ fun DashboardScreen(
     val expiredBatches by viewModel.expiredBatches.collectAsState()
     val expiringSoon by viewModel.expiringSoonBatches.collectAsState()
     val recentTx by viewModel.recentTransactions.collectAsState()
+    val warningDays by viewModel.expiryWarningDays.collectAsState()
 
     Scaffold(
         topBar = {
@@ -126,7 +127,7 @@ fun DashboardScreen(
             if (expiringSoon.isNotEmpty()) {
                 item {
                     SectionHeader(
-                        title = "⚠ Expiring in 90 Days (${expiringSoon.size})",
+                        title = "⚠ Expiring in $warningDays Days (${expiringSoon.size})",
                         actionLabel = "View All",
                         onAction = onNavigateToExpiry
                     )

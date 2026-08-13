@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.waterproofing.inventory.data.entity.VariantEntity
 import com.waterproofing.inventory.data.model.LowStockVariant
@@ -15,12 +16,24 @@ interface VariantDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(variant: VariantEntity): Long
 
+    @Query("DELETE FROM stock_transactions WHERE variant_id = :variantId")
+    suspend fun deleteTransactionsByVariantId(variantId: Long)
+
+    @Query("DELETE FROM variants WHERE id = :variantId")
+    suspend fun deleteVariantByIdOnly(variantId: Long)
+
+    @Transaction
+    suspend fun deleteVariant(variantId: Long) {
+        deleteTransactionsByVariantId(variantId)
+        deleteVariantByIdOnly(variantId)
+    }
+
     @Update
     suspend fun update(variant: VariantEntity)
 
     @Query("""
         SELECT v.id, v.product_id as productId, v.name, v.quantity_value as quantityValue, v.unit, 
-               v.sku, v.min_stock_threshold as minStockThreshold, v.is_archived as isArchived, 
+               v.min_stock_threshold as minStockThreshold, v.is_archived as isArchived, 
                v.created_at as createdAt, v.updated_at as updatedAt, 
                COALESCE(SUM(b.current_quantity), 0.0) as totalStock 
         FROM variants v 
@@ -33,7 +46,7 @@ interface VariantDao {
 
     @Query("""
         SELECT v.id, v.product_id as productId, v.name, v.quantity_value as quantityValue, v.unit, 
-               v.sku, v.min_stock_threshold as minStockThreshold, v.is_archived as isArchived, 
+               v.min_stock_threshold as minStockThreshold, v.is_archived as isArchived, 
                v.created_at as createdAt, v.updated_at as updatedAt, 
                COALESCE(SUM(b.current_quantity), 0.0) as totalStock 
         FROM variants v 

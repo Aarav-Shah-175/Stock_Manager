@@ -13,7 +13,7 @@ import java.util.*
 object BackupManager {
 
     private const val DB_NAME = "waterproofing_inventory_db"
-    private const val BACKUP_PREFIX = "WaterproofInventory_Backup"
+    private const val BACKUP_PREFIX = "Inventory_Backup"
     private const val BACKUP_EXT = ".db"
 
     /**

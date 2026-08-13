@@ -48,6 +48,10 @@ class ProductRepository(private val productDao: ProductDao) {
         productDao.updateArchiveStatus(productId, isArchived = false)
     }
 
+    suspend fun deleteProduct(productId: Long) {
+        productDao.deleteProduct(productId)
+    }
+
     fun searchProducts(query: String): Flow<List<ProductWithCategory>> {
         val formattedQuery = "%$query%"
         return productDao.searchActiveProductsWithCategoryFlow(formattedQuery)

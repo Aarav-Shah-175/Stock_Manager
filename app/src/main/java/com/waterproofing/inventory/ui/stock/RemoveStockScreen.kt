@@ -37,6 +37,7 @@ fun RemoveStockScreen(
     // FEFO: auto-suggest first non-depleted batch
     var selectedBatch by remember { mutableStateOf<BatchWithProductInfo?>(null) }
 
+    var productSearchQuery by remember { mutableStateOf("") }
     var quantityStr by remember { mutableStateOf("") }
     var reason by remember { mutableStateOf("Issued") }
     var customerProject by remember { mutableStateOf("") }
@@ -51,6 +52,20 @@ fun RemoveStockScreen(
     var successMessage by remember { mutableStateOf<String?>(null) }
 
     val sdf = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
+
+    // Sync search query when selectedProduct changes
+    LaunchedEffect(selectedProduct) {
+        productSearchQuery = selectedProduct?.let { "${it.name} — ${it.brand}" } ?: ""
+    }
+
+    val filteredProducts = remember(products, productSearchQuery, selectedProduct) {
+        val selectedName = selectedProduct?.let { "${it.name} — ${it.brand}" } ?: ""
+        if (productSearchQuery == selectedName) products
+        else products.filter {
+            it.name.contains(productSearchQuery, ignoreCase = true) ||
+            it.brand.contains(productSearchQuery, ignoreCase = true)
+        }
+    }
 
     // Auto-select FEFO batch when batch list changes
     LaunchedEffect(batches) {
@@ -81,28 +96,44 @@ fun RemoveStockScreen(
         ) {
             Text("Select Product & Variant", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 
-            // Product dropdown
-            ExposedDropdownMenuBox(expanded = productExpanded, onExpandedChange = { productExpanded = !productExpanded }) {
+            // Product searchable autocomplete dropdown
+            ExposedDropdownMenuBox(
+                expanded = productExpanded,
+                onExpandedChange = { productExpanded = it }
+            ) {
                 OutlinedTextField(
-                    readOnly = true,
-                    value = selectedProduct?.name ?: "Select Product",
-                    onValueChange = {},
-                    label = { Text("Product*") },
+                    value = productSearchQuery,
+                    onValueChange = {
+                        productSearchQuery = it
+                        productExpanded = true
+                        if (it.isBlank()) {
+                            selectedProduct = null
+                            selectedVariant = null
+                            selectedBatch = null
+                            viewModel.selectProduct(null)
+                        }
+                    },
+                    label = { Text("Product* (Searchable)") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = productExpanded) },
                     modifier = Modifier.fillMaxWidth().menuAnchor()
                 )
-                ExposedDropdownMenu(expanded = productExpanded, onDismissRequest = { productExpanded = false }) {
-                    products.forEach { product ->
-                        DropdownMenuItem(
-                            text = { Text("${product.name} — ${product.brand}") },
-                            onClick = {
-                                selectedProduct = product
-                                selectedVariant = null
-                                selectedBatch = null
-                                viewModel.selectProduct(product.id)
-                                productExpanded = false
-                            }
-                        )
+                if (filteredProducts.isNotEmpty()) {
+                    ExposedDropdownMenu(
+                        expanded = productExpanded,
+                        onDismissRequest = { productExpanded = false }
+                    ) {
+                        filteredProducts.forEach { product ->
+                            DropdownMenuItem(
+                                text = { Text("${product.name} — ${product.brand}") },
+                                onClick = {
+                                    selectedProduct = product
+                                    selectedVariant = null
+                                    selectedBatch = null
+                                    viewModel.selectProduct(product.id)
+                                    productExpanded = false
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -137,12 +168,12 @@ fun RemoveStockScreen(
             if (batches.isNotEmpty()) {
                 HorizontalDivider()
                 Text(
-                    "FEFO Batch Selection",
+                    "Batch Selection",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    "Oldest expiry batch is auto-selected per FEFO.",
+                    "Oldest expiry batch is auto-selected.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.outline
                 )

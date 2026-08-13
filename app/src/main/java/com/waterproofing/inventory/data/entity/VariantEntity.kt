@@ -17,8 +17,7 @@ import androidx.room.PrimaryKey
         )
     ],
     indices = [
-        Index(value = ["product_id"]),
-        Index(value = ["sku"])
+        Index(value = ["product_id"])
     ]
 )
 data class VariantEntity(
@@ -30,7 +29,6 @@ data class VariantEntity(
     @ColumnInfo(name = "quantity_value")
     val quantityValue: Double,
     val unit: String,
-    val sku: String? = null,
     @ColumnInfo(name = "min_stock_threshold")
     val minStockThreshold: Double = 0.0,
     @ColumnInfo(name = "is_archived")

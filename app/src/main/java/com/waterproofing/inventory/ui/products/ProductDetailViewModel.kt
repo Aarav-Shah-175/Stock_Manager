@@ -48,11 +48,11 @@ class ProductDetailViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun addVariant(name: String, quantityValue: Double, unit: String, sku: String?, minStockThreshold: Double) {
+    fun addVariant(name: String, quantityValue: Double, unit: String, minStockThreshold: Double) {
         val pid = productIdState.value ?: return
         viewModelScope.launch {
             if (name.isNotBlank() && unit.isNotBlank()) {
-                variantRepository.insert(pid, name, quantityValue, unit, sku, minStockThreshold)
+                variantRepository.insert(pid, name, quantityValue, unit, minStockThreshold)
             }
         }
     }
@@ -68,6 +68,14 @@ class ProductDetailViewModel(
     fun archiveVariant(variantId: Long) {
         viewModelScope.launch {
             variantRepository.archiveVariant(variantId)
+        }
+    }
+
+    fun deleteProduct(onSuccess: () -> Unit) {
+        val pid = productIdState.value ?: return
+        viewModelScope.launch {
+            productRepository.deleteProduct(pid)
+            onSuccess()
         }
     }
 }
