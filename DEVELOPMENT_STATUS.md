@@ -9,8 +9,8 @@ Phase 1 — Foundation          COMPLETE
 Phase 2 — Products & Variants COMPLETE
 Phase 3 — Batches & Expiry    COMPLETE
 Phase 4 — Stock & History     COMPLETE
-Phase 5 — Dashboard & Search  IN PROGRESS
-Phase 6 — Backup & Restore    NOT STARTED
+Phase 5 — Dashboard & Search  COMPLETE
+Phase 6 — Backup & Restore    IN PROGRESS
 Phase 7 — Testing & Polish    NOT STARTED
 ```
 
@@ -45,4 +45,13 @@ Phase 7 — Testing & Polish    NOT STARTED
   * Created `TransactionHistoryScreen` — scrollable log with tab filters (ALL / IN / OUT / ADJUSTMENT); transaction cards showing product, variant, batch, quantity, reason, timestamp.
   * Wired `AddStockScreen`, `RemoveStockScreen`, `TransactionHistoryScreen` into navigation replacing placeholders.
   * `StockViewModel` added to `ViewModelFactory`; `TransactionRepository` added to Application and factory.
+* **Phase 5 Dashboard & Search:**
+  * Built `DashboardViewModel` aggregating product/variant counts, low-stock variants, expired/expiring-soon batches, and recent transactions.
+  * Replaced `DashboardScreen` skeleton with live summary stat cards (Products, Variants, Low Stock, Expired), alert rows for expiring/low-stock items, and a recent transactions mini-log.
+  * Created `LowStockScreen` — full list of all variants below minimum threshold with deficit calculation and reorder suggestion.
+  * Created `ExpiryManagementScreen` — tabbed view (Expiring Soon / Expired) showing batch details with color-coded status badges.
+  * Replaced `MoreScreen` skeleton with a proper navigation menu (icon cards for all sub-sections).
+  * Wired all screens into `AppNavigation`; `DashboardViewModel` added to `ViewModelFactory`.
+
+## Known Issues or Limitations
 *None*

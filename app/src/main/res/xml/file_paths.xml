@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Allows sharing files from the app's external files directory -->
+    <external-files-path name="backup_files" path="." />
+    <!-- Allows sharing files from the app's internal files directory -->
+    <files-path name="internal_files" path="." />
+</paths>

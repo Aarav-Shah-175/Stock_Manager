@@ -34,6 +34,7 @@ import com.waterproofing.inventory.InventoryApplication
 import com.waterproofing.inventory.ui.ViewModelFactory
 import com.waterproofing.inventory.ui.dashboard.DashboardScreen
 import com.waterproofing.inventory.ui.dashboard.DashboardViewModel
+import com.waterproofing.inventory.ui.more.BackupRestoreScreen
 import com.waterproofing.inventory.ui.more.CategoryManagementScreen
 import com.waterproofing.inventory.ui.more.CategoryViewModel
 import com.waterproofing.inventory.ui.more.ExpiryManagementScreen
@@ -221,7 +222,7 @@ fun MainAppNavigation() {
                 )
             }
             composable(Screen.BackupRestore.route) {
-                PlaceholderScreen(title = "Backup & Restore", onBack = { navController.popBackStack() })
+                BackupRestoreScreen(onBack = { navController.popBackStack() })
             }
             composable(Screen.Settings.route) {
                 PlaceholderScreen(title = "Settings", onBack = { navController.popBackStack() })
