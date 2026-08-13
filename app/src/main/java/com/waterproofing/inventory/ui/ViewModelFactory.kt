@@ -7,6 +7,7 @@ import com.waterproofing.inventory.data.repository.CategoryRepository
 import com.waterproofing.inventory.data.repository.ProductRepository
 import com.waterproofing.inventory.data.repository.TransactionRepository
 import com.waterproofing.inventory.data.repository.VariantRepository
+import com.waterproofing.inventory.ui.dashboard.DashboardViewModel
 import com.waterproofing.inventory.ui.more.CategoryViewModel
 import com.waterproofing.inventory.ui.products.ProductDetailViewModel
 import com.waterproofing.inventory.ui.products.ProductViewModel
@@ -24,6 +25,9 @@ class ViewModelFactory(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return when {
+            modelClass.isAssignableFrom(DashboardViewModel::class.java) -> {
+                DashboardViewModel(productRepository, variantRepository, batchRepository, transactionRepository) as T
+            }
             modelClass.isAssignableFrom(CategoryViewModel::class.java) -> {
                 CategoryViewModel(categoryRepository) as T
             }

@@ -33,8 +33,11 @@ import androidx.navigation.compose.rememberNavController
 import com.waterproofing.inventory.InventoryApplication
 import com.waterproofing.inventory.ui.ViewModelFactory
 import com.waterproofing.inventory.ui.dashboard.DashboardScreen
+import com.waterproofing.inventory.ui.dashboard.DashboardViewModel
 import com.waterproofing.inventory.ui.more.CategoryManagementScreen
 import com.waterproofing.inventory.ui.more.CategoryViewModel
+import com.waterproofing.inventory.ui.more.ExpiryManagementScreen
+import com.waterproofing.inventory.ui.more.LowStockScreen
 import com.waterproofing.inventory.ui.more.MoreScreen
 import com.waterproofing.inventory.ui.products.ProductDetailScreen
 import com.waterproofing.inventory.ui.products.ProductDetailViewModel
@@ -76,6 +79,7 @@ fun MainAppNavigation() {
     val productDetailViewModel: ProductDetailViewModel = viewModel(factory = factory)
     val variantViewModel: VariantViewModel = viewModel(factory = factory)
     val stockViewModel: StockViewModel = viewModel(factory = factory)
+    val dashboardViewModel: DashboardViewModel = viewModel(factory = factory)
 
     val items = listOf(
         NavigationItem.Dashboard,
@@ -120,7 +124,12 @@ fun MainAppNavigation() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Screen.Dashboard.route) {
-                DashboardScreen()
+                DashboardScreen(
+                    viewModel = dashboardViewModel,
+                    onNavigateToLowStock = { navController.navigate(Screen.LowStock.route) },
+                    onNavigateToExpiry = { navController.navigate(Screen.ExpiryManagement.route) },
+                    onNavigateToHistory = { navController.navigate(Screen.TransactionHistory.createRoute()) }
+                )
             }
             composable(Screen.Products.route) {
                 ProductListScreen(
@@ -200,10 +209,16 @@ fun MainAppNavigation() {
                 )
             }
             composable(Screen.ExpiryManagement.route) {
-                PlaceholderScreen(title = "Expiry Management", onBack = { navController.popBackStack() })
+                ExpiryManagementScreen(
+                    viewModel = dashboardViewModel,
+                    onBack = { navController.popBackStack() }
+                )
             }
             composable(Screen.LowStock.route) {
-                PlaceholderScreen(title = "Low Stock Alerts", onBack = { navController.popBackStack() })
+                LowStockScreen(
+                    viewModel = dashboardViewModel,
+                    onBack = { navController.popBackStack() }
+                )
             }
             composable(Screen.BackupRestore.route) {
                 PlaceholderScreen(title = "Backup & Restore", onBack = { navController.popBackStack() })

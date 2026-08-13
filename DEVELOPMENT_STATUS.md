@@ -8,8 +8,8 @@ This document details the current state of implementation across the planned dev
 Phase 1 — Foundation          COMPLETE
 Phase 2 — Products & Variants COMPLETE
 Phase 3 — Batches & Expiry    COMPLETE
-Phase 4 — Stock & History     IN PROGRESS
-Phase 5 — Dashboard & Search  NOT STARTED
+Phase 4 — Stock & History     COMPLETE
+Phase 5 — Dashboard & Search  IN PROGRESS
 Phase 6 — Backup & Restore    NOT STARTED
 Phase 7 — Testing & Polish    NOT STARTED
 ```
@@ -37,5 +37,12 @@ Phase 7 — Testing & Polish    NOT STARTED
   * Linked detailed batch CRUD forms.
   * Wrote and passed comprehensive unit tests for `ExpiryCalculator` (leap years, timezone safety, month-end arithmetic).
 
-## Known Issues or Limitations
+* **Phase 4 Stock & History:**
+  * Built `StockScreen` operation hub (Stock IN / Stock OUT / History cards).
+  * Implemented `StockViewModel` with atomic IN, FEFO-guided OUT, and Adjustment operations (validates stock before decrement).
+  * Created `AddStockScreen` — cascading Product→Variant→Batch dropdowns, quantity entry, reason/invoice fields.
+  * Created `RemoveStockScreen` — FEFO auto-selects oldest-expiry non-depleted batch; expiry warning banners for expired/expiring-soon batches; customer/project/invoice fields.
+  * Created `TransactionHistoryScreen` — scrollable log with tab filters (ALL / IN / OUT / ADJUSTMENT); transaction cards showing product, variant, batch, quantity, reason, timestamp.
+  * Wired `AddStockScreen`, `RemoveStockScreen`, `TransactionHistoryScreen` into navigation replacing placeholders.
+  * `StockViewModel` added to `ViewModelFactory`; `TransactionRepository` added to Application and factory.
 *None*
