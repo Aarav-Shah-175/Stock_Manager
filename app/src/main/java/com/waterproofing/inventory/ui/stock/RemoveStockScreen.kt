@@ -269,7 +269,7 @@ fun RemoveStockScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            OutlinedTextField(
+        /*    OutlinedTextField(
                 value = customerProject,
                 onValueChange = { customerProject = it },
                 label = { Text("Customer / Project (Optional)") },
@@ -283,7 +283,7 @@ fun RemoveStockScreen(
                 label = { Text("Invoice Number (Optional)") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
-            )
+            ) */
 
             OutlinedTextField(
                 value = notes,

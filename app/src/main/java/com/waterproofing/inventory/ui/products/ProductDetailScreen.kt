@@ -344,7 +344,7 @@ fun VariantCardItem(
             ) {
                 Column {
                     Text(
-                        text = "Current Stock: ${variant.totalStock} units",
+                        text = "Total Stock: ${variant.totalStock} units",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = if (isLowStock) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
@@ -403,12 +403,12 @@ fun VariantAddEditDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Variant Name* (e.g. 5 kg bucket, 20L)") },
+                    label = { Text("Variant Name* (e.g. 5 kg, 20L)") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Row(modifier = Modifier.fillMaxWidth()) {
-                    OutlinedTextField(
+                   /* OutlinedTextField(
                         value = qValueStr,
                         onValueChange = { qValueStr = it },
                         label = { Text("Qty Value* (e.g. 5, 20)") },
@@ -416,19 +416,19 @@ fun VariantAddEditDialog(
                         singleLine = true,
                         modifier = Modifier.weight(1f)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(8.dp))*/
                     OutlinedTextField(
                         value = unit,
                         onValueChange = { unit = it },
-                        label = { Text("Unit* (e.g. kg, L)") },
+                        label = { Text("Unit* (e.g. Bucket, Can)") },
                         singleLine = true,
                         modifier = Modifier.weight(1f)
                     )
-                }
+                } 
                 OutlinedTextField(
                     value = thresholdStr,
                     onValueChange = { thresholdStr = it },
-                    label = { Text("Min Stock Alert Threshold (units)") },
+                    label = { Text("Low Stock Alert At (units)") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()

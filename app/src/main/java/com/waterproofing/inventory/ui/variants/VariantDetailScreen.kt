@@ -107,10 +107,10 @@ fun VariantDetailScreen(
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.SemiBold
                             )
-                            Text(
+                          /*  Text(
                                 text = "Min Alert: ${v.minStockThreshold} ${v.unit}",
                                 style = MaterialTheme.typography.bodyMedium
-                            )
+                            ) */
                         }
                     }
                 }
