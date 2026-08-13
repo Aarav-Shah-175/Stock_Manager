@@ -40,7 +40,11 @@ import com.waterproofing.inventory.ui.products.ProductDetailScreen
 import com.waterproofing.inventory.ui.products.ProductDetailViewModel
 import com.waterproofing.inventory.ui.products.ProductListScreen
 import com.waterproofing.inventory.ui.products.ProductViewModel
+import com.waterproofing.inventory.ui.stock.AddStockScreen
+import com.waterproofing.inventory.ui.stock.RemoveStockScreen
 import com.waterproofing.inventory.ui.stock.StockScreen
+import com.waterproofing.inventory.ui.stock.StockViewModel
+import com.waterproofing.inventory.ui.stock.TransactionHistoryScreen
 import com.waterproofing.inventory.ui.variants.VariantDetailScreen
 import com.waterproofing.inventory.ui.variants.VariantViewModel
 
@@ -62,7 +66,8 @@ fun MainAppNavigation() {
             app.categoryRepository,
             app.productRepository,
             app.variantRepository,
-            app.batchRepository
+            app.batchRepository,
+            app.transactionRepository
         )
     }
 
@@ -70,6 +75,7 @@ fun MainAppNavigation() {
     val categoryViewModel: CategoryViewModel = viewModel(factory = factory)
     val productDetailViewModel: ProductDetailViewModel = viewModel(factory = factory)
     val variantViewModel: VariantViewModel = viewModel(factory = factory)
+    val stockViewModel: StockViewModel = viewModel(factory = factory)
 
     val items = listOf(
         NavigationItem.Dashboard,
@@ -176,13 +182,22 @@ fun MainAppNavigation() {
                 PlaceholderScreen(title = "Batch Detail ($batchId)", onBack = { navController.popBackStack() })
             }
             composable(Screen.AddStock.route) {
-                PlaceholderScreen(title = "Add Stock", onBack = { navController.popBackStack() })
+                AddStockScreen(
+                    viewModel = stockViewModel,
+                    onBack = { navController.popBackStack() }
+                )
             }
             composable(Screen.RemoveStock.route) {
-                PlaceholderScreen(title = "Remove Stock", onBack = { navController.popBackStack() })
+                RemoveStockScreen(
+                    viewModel = stockViewModel,
+                    onBack = { navController.popBackStack() }
+                )
             }
             composable(Screen.TransactionHistory.route) {
-                PlaceholderScreen(title = "Transaction History", onBack = { navController.popBackStack() })
+                TransactionHistoryScreen(
+                    viewModel = stockViewModel,
+                    onBack = { navController.popBackStack() }
+                )
             }
             composable(Screen.ExpiryManagement.route) {
                 PlaceholderScreen(title = "Expiry Management", onBack = { navController.popBackStack() })

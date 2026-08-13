@@ -5,17 +5,20 @@ import androidx.lifecycle.ViewModelProvider
 import com.waterproofing.inventory.data.repository.BatchRepository
 import com.waterproofing.inventory.data.repository.CategoryRepository
 import com.waterproofing.inventory.data.repository.ProductRepository
+import com.waterproofing.inventory.data.repository.TransactionRepository
 import com.waterproofing.inventory.data.repository.VariantRepository
 import com.waterproofing.inventory.ui.more.CategoryViewModel
 import com.waterproofing.inventory.ui.products.ProductDetailViewModel
 import com.waterproofing.inventory.ui.products.ProductViewModel
+import com.waterproofing.inventory.ui.stock.StockViewModel
 import com.waterproofing.inventory.ui.variants.VariantViewModel
 
 class ViewModelFactory(
     private val categoryRepository: CategoryRepository,
     private val productRepository: ProductRepository,
     private val variantRepository: VariantRepository,
-    private val batchRepository: BatchRepository
+    private val batchRepository: BatchRepository,
+    private val transactionRepository: TransactionRepository
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -32,6 +35,9 @@ class ViewModelFactory(
             }
             modelClass.isAssignableFrom(VariantViewModel::class.java) -> {
                 VariantViewModel(variantRepository, batchRepository) as T
+            }
+            modelClass.isAssignableFrom(StockViewModel::class.java) -> {
+                StockViewModel(productRepository, variantRepository, batchRepository, transactionRepository) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }
