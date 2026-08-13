@@ -1,0 +1,433 @@
+package com.waterproofing.inventory.ui.products
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import com.waterproofing.inventory.data.entity.VariantEntity
+import com.waterproofing.inventory.data.model.VariantWithStock
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProductDetailScreen(
+    productId: Long,
+    viewModel: ProductDetailViewModel,
+    onBack: () -> Unit,
+    onNavigateToVariant: (Long) -> Unit
+) {
+    LaunchedEffect(productId) {
+        viewModel.setProductId(productId)
+    }
+
+    val product by viewModel.product.collectAsState()
+    val variants by viewModel.variants.collectAsState()
+
+    var showAddDialog by remember { mutableStateOf(false) }
+    var variantToEdit by remember { mutableStateOf<VariantWithStock?>(null) }
+    var variantToArchive by remember { mutableStateOf<VariantWithStock?>(null) }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(product?.name ?: "Product Details") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                }
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showAddDialog = true },
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add Variant")
+            }
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            // Product Info Banner
+            product?.let { prod ->
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    tonalElevation = 2.dp
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = prod.name,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Brand: ${prod.brand}",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        prod.categoryName?.let { cat ->
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Category: $cat",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                        if (prod.description.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = prod.description,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Variants Header
+            Text(
+                text = "Product Variants",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+
+            // Variants List
+            if (variants.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No variants added to this product.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f)
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(variants, key = { it.id }) { variant ->
+                        VariantCardItem(
+                            variant = variant,
+                            onClick = { onNavigateToVariant(variant.id) },
+                            onEdit = { variantToEdit = variant },
+                            onArchive = { variantToArchive = variant }
+                        )
+                    }
+                }
+            }
+        }
+
+        // Add Variant Dialog
+        if (showAddDialog) {
+            VariantAddEditDialog(
+                onDismiss = { showAddDialog = false },
+                onConfirm = { name, qValue, unit, sku, threshold ->
+                    viewModel.addVariant(name, qValue, unit, sku, threshold)
+                    showAddDialog = false
+                }
+            )
+        }
+
+        // Edit Variant Dialog
+        variantToEdit?.let { variant ->
+            VariantAddEditDialog(
+                variant = variant,
+                onDismiss = { variantToEdit = null },
+                onConfirm = { name, qValue, unit, sku, threshold ->
+                    viewModel.updateVariant(
+                        VariantEntity(
+                            id = variant.id,
+                            productId = variant.productId,
+                            name = name,
+                            quantityValue = qValue,
+                            unit = unit,
+                            sku = sku,
+                            minStockThreshold = threshold,
+                            isArchived = variant.isArchived,
+                            createdAt = variant.createdAt
+                        )
+                    )
+                    variantToEdit = null
+                }
+            )
+        }
+
+        // Archive Variant Dialog
+        variantToArchive?.let { variant ->
+            AlertDialog(
+                onDismissRequest = { variantToArchive = null },
+                title = { Text("Archive Variant") },
+                text = { Text("Archive variant \"${variant.name}\"? It will be hidden from normal active views but history remains.") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            viewModel.archiveVariant(variant.id)
+                            variantToArchive = null
+                        }
+                    ) {
+                        Text("Archive")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { variantToArchive = null }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun VariantCardItem(
+    variant: VariantWithStock,
+    onClick: () -> Unit,
+    onEdit: () -> Unit,
+    onArchive: () -> Unit
+) {
+    val isLowStock = variant.totalStock < variant.minStockThreshold
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isLowStock) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = variant.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isLowStock) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSurface
+                    )
+                    variant.sku?.let {
+                        Text(
+                            text = "SKU: $it",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (isLowStock) MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.outline
+                        )
+                    }
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onEdit) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit Variant",
+                            tint = if (isLowStock) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    IconButton(onClick = onArchive) {
+                        Icon(
+                            imageVector = Icons.Default.Archive,
+                            contentDescription = "Archive Variant",
+                            tint = if (isLowStock) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Column {
+                    Text(
+                        text = "Current Stock: ${variant.totalStock} units",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (isLowStock) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Minimum Stock: ${variant.minStockThreshold} units",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (isLowStock) MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.outline
+                    )
+                }
+
+                if (isLowStock) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = "Low Stock Warning",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.width(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "LOW STOCK",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun VariantAddEditDialog(
+    variant: VariantWithStock? = null,
+    onDismiss: () -> Unit,
+    onConfirm: (String, Double, String, String?, Double) -> Unit
+) {
+    var name by remember { mutableStateOf(variant?.name ?: "") }
+    var qValueStr by remember { mutableStateOf(variant?.quantityValue?.toString() ?: "") }
+    var unit by remember { mutableStateOf(variant?.unit ?: "") }
+    var sku by remember { mutableStateOf(variant?.sku ?: "") }
+    var thresholdStr by remember { mutableStateOf(variant?.minStockThreshold?.toString() ?: "") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (variant == null) "Add Variant" else "Edit Variant") },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Variant Name* (e.g. 5 kg bucket, 20L)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = qValueStr,
+                        onValueChange = { qValueStr = it },
+                        label = { Text("Qty Value* (e.g. 5, 20)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        singleLine = true,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    OutlinedTextField(
+                        value = unit,
+                        onValueChange = { unit = it },
+                        label = { Text("Unit* (e.g. kg, L)") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                OutlinedTextField(
+                    value = sku,
+                    onValueChange = { sku = it },
+                    label = { Text("SKU / Code") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = thresholdStr,
+                    onValueChange = { thresholdStr = it },
+                    label = { Text("Min Stock Alert Threshold (units)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val qValue = qValueStr.toDoubleOrNull() ?: 0.0
+                    val threshold = thresholdStr.toDoubleOrNull() ?: 0.0
+                    if (name.isNotBlank() && unit.isNotBlank() && qValue > 0.0) {
+                        onConfirm(name, qValue, unit, sku.trim().takeIf { it.isNotEmpty() }, threshold)
+                    }
+                }
+            ) {
+                Text(if (variant == null) "Add" else "Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}

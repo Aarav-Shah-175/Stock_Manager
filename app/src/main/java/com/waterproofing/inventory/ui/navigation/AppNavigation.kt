@@ -5,9 +5,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Inventory
-import androidx.compose.material.icons.filled.ListAlt
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -19,29 +19,58 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.waterproofing.inventory.InventoryApplication
+import com.waterproofing.inventory.ui.ViewModelFactory
 import com.waterproofing.inventory.ui.dashboard.DashboardScreen
+import com.waterproofing.inventory.ui.more.CategoryManagementScreen
+import com.waterproofing.inventory.ui.more.CategoryViewModel
 import com.waterproofing.inventory.ui.more.MoreScreen
+import com.waterproofing.inventory.ui.products.ProductDetailScreen
+import com.waterproofing.inventory.ui.products.ProductDetailViewModel
 import com.waterproofing.inventory.ui.products.ProductListScreen
+import com.waterproofing.inventory.ui.products.ProductViewModel
 import com.waterproofing.inventory.ui.stock.StockScreen
+import com.waterproofing.inventory.ui.variants.VariantDetailScreen
+import com.waterproofing.inventory.ui.variants.VariantViewModel
 
 sealed class NavigationItem(val route: String, val title: String, val icon: ImageVector) {
     object Dashboard : NavigationItem(Screen.Dashboard.route, "Dashboard", Icons.Default.Dashboard)
     object Products : NavigationItem(Screen.Products.route, "Products", Icons.Default.Inventory)
-    object Stock : NavigationItem(Screen.Stock.route, "Stock", Icons.Default.ListAlt)
+    object Stock : NavigationItem(Screen.Stock.route, "Stock", Icons.AutoMirrored.Filled.ListAlt)
     object More : NavigationItem(Screen.More.route, "More", Icons.Default.MoreHoriz)
 }
 
 @Composable
 fun MainAppNavigation() {
     val navController = rememberNavController()
+    val context = LocalContext.current
+    val app = context.applicationContext as InventoryApplication
+
+    val factory = remember(app) {
+        ViewModelFactory(
+            app.categoryRepository,
+            app.productRepository,
+            app.variantRepository,
+            app.batchRepository
+        )
+    }
+
+    val productViewModel: ProductViewModel = viewModel(factory = factory)
+    val categoryViewModel: CategoryViewModel = viewModel(factory = factory)
+    val productDetailViewModel: ProductDetailViewModel = viewModel(factory = factory)
+    val variantViewModel: VariantViewModel = viewModel(factory = factory)
+
     val items = listOf(
         NavigationItem.Dashboard,
         NavigationItem.Products,
@@ -89,6 +118,7 @@ fun MainAppNavigation() {
             }
             composable(Screen.Products.route) {
                 ProductListScreen(
+                    viewModel = productViewModel,
                     onNavigateToDetail = { productId ->
                         navController.navigate(Screen.ProductDetail.createRoute(productId))
                     }
@@ -111,15 +141,36 @@ fun MainAppNavigation() {
                 )
             }
 
-            // Skeletons for sub-routes
+            // Real Sub-screens
             composable(Screen.ProductDetail.route) { backStackEntry ->
                 val productId = backStackEntry.arguments?.getString("productId")?.toLongOrNull() ?: 0L
-                PlaceholderScreen(title = "Product Detail ($productId)", onBack = { navController.popBackStack() })
+                ProductDetailScreen(
+                    productId = productId,
+                    viewModel = productDetailViewModel,
+                    onBack = { navController.popBackStack() },
+                    onNavigateToVariant = { variantId ->
+                        navController.navigate(Screen.VariantDetail.createRoute(variantId))
+                    }
+                )
             }
+
             composable(Screen.VariantDetail.route) { backStackEntry ->
                 val variantId = backStackEntry.arguments?.getString("variantId")?.toLongOrNull() ?: 0L
-                PlaceholderScreen(title = "Variant Detail ($variantId)", onBack = { navController.popBackStack() })
+                VariantDetailScreen(
+                    variantId = variantId,
+                    viewModel = variantViewModel,
+                    onBack = { navController.popBackStack() }
+                )
             }
+
+            composable(Screen.CategoryManagement.route) {
+                CategoryManagementScreen(
+                    viewModel = categoryViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            // Placeholder Screens for other features (implemented in later phases)
             composable(Screen.BatchDetail.route) { backStackEntry ->
                 val batchId = backStackEntry.arguments?.getString("batchId")?.toLongOrNull() ?: 0L
                 PlaceholderScreen(title = "Batch Detail ($batchId)", onBack = { navController.popBackStack() })
@@ -138,9 +189,6 @@ fun MainAppNavigation() {
             }
             composable(Screen.LowStock.route) {
                 PlaceholderScreen(title = "Low Stock Alerts", onBack = { navController.popBackStack() })
-            }
-            composable(Screen.CategoryManagement.route) {
-                PlaceholderScreen(title = "Category Management", onBack = { navController.popBackStack() })
             }
             composable(Screen.BackupRestore.route) {
                 PlaceholderScreen(title = "Backup & Restore", onBack = { navController.popBackStack() })
