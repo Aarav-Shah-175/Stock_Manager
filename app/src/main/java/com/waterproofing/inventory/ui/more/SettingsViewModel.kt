@@ -24,6 +24,30 @@ class SettingsViewModel(
         settingsRepository.getDefaultCurrencyFlow()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "INR")
 
+    val autoBackupEnabled: StateFlow<Boolean> =
+        settingsRepository.getAutoBackupEnabledFlow()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
+    val backupTime: StateFlow<String> =
+        settingsRepository.getAutoBackupTimeFlow()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "23:30")
+
+    val keepBackups: StateFlow<Int> =
+        settingsRepository.getAutoBackupKeepCountFlow()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 7)
+
+    val lastSuccessfulBackup: StateFlow<Long?> =
+        settingsRepository.getLastSuccessfulBackupFlow()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val lastBackupStatus: StateFlow<String?> =
+        settingsRepository.getLastBackupStatusFlow()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val autoBackupFolderUri: StateFlow<String?> =
+        settingsRepository.getAutoBackupFolderUriFlow()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     fun setExpiryWarningDays(days: Int) {
         viewModelScope.launch {
             settingsRepository.setExpiryWarningDays(days)
@@ -39,6 +63,30 @@ class SettingsViewModel(
     fun setDefaultCurrency(currency: String) {
         viewModelScope.launch {
             settingsRepository.setDefaultCurrency(currency)
+        }
+    }
+
+    fun setAutoBackupEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setAutoBackupEnabled(enabled)
+        }
+    }
+
+    fun setBackupTime(time: String) {
+        viewModelScope.launch {
+            settingsRepository.setAutoBackupTime(time)
+        }
+    }
+
+    fun setKeepBackups(count: Int) {
+        viewModelScope.launch {
+            settingsRepository.setAutoBackupKeepCount(count)
+        }
+    }
+
+    fun setAutoBackupFolderUri(uriStr: String?) {
+        viewModelScope.launch {
+            settingsRepository.setAutoBackupFolderUri(uriStr)
         }
     }
 }

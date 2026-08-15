@@ -21,30 +21,29 @@ Product
 
 ## Tech Stack
 - Kotlin & Jetpack Compose
-- Room Database & SQLite **(DB version 2)**
+- Room Database & SQLite **(DB version 3)**
 - Navigation Compose (transitions disabled — instant navigation)
 - Kotlin Coroutines & Flow (StateFlow)
-- WorkManager (expiry notifications, daily background check)
+- WorkManager (expiry notifications, 6-month transaction purge, automatic daily backup)
 - MVVM / Clean Architecture
 - Material 3 Design
 - Gradle Kotlin DSL (`.gradle.kts`)
 
-## Database Schema Notes (Version 2)
-- `variants` table: **SKU column removed** in migration v1→v2. Migration uses temp-table copy strategy.
-- `batches` table: unchanged at v2. Supplier/purchase/invoice columns exist in schema but are no longer editable via UI.
-- Migration class: `MIGRATION_1_2` in `AppDatabase.kt`.
+## Database Schema Notes (Version 3)
+- `products` table: **Brand column removed** in migration v2→v3 (`MIGRATION_2_3`).
+- `variants` table: **SKU column removed** in migration v1→v2 (`MIGRATION_1_2`).
+- `batches` table: Supplier/purchase/invoice columns exist in schema for backward compatibility but are not editable in UI.
+- Migration classes: `MIGRATION_1_2`, `MIGRATION_2_3` in `AppDatabase.kt`.
 
-## Key Post-Completion Changes (2026-08-13)
+## Key Post-Completion Changes (2026-08-14)
 | Change | Files Affected |
 |--------|---------------|
-| SKU removed from variants | `VariantEntity`, `VariantWithStock`, `VariantDao`, `ProductDao`, `VariantRepository`, `ProductDetailViewModel`, `ProductDetailScreen`, `VariantDetailScreen`, `ProductListScreen` |
-| Batch number auto-generated | `VariantDetailScreen` (BatchAddEditDialog) |
-| Supplier/Purchasing UI removed | `VariantDetailScreen` (BatchAddEditDialog) |
-| Searchable product dropdown | `AddStockScreen`, `RemoveStockScreen` |
-| No page transition animations | `AppNavigation.kt` |
-| Backup prefix changed | `BackupManager.kt` → `Inventory_Backup` |
-| Adjustment hidden from history | `TransactionHistoryScreen` |
-| Expiry notifications | `ExpiryNotificationWorker`, `InventoryApplication`, `MainActivity`, `AndroidManifest.xml`, `BatchDao` |
+| Brand field completely removed | `ProductEntity`, `ProductWithCategory`, `StockTransactionWithDetails`, `LowStockVariant`, `BatchWithProductInfo`, DAOs, `ProductRepository`, `ProductViewModel`, `ProductListScreen`, `ProductDetailScreen`, `AddStockScreen`, `RemoveStockScreen` |
+| DB Migration v2→v3 | `AppDatabase.kt` (MIGRATION_2_3 removes `brand` from `products`) |
+| Variant unit display | `VariantDetailScreen.kt` (shows unit next to stock & min stock threshold) |
+| Transaction History search & date filter | `StockTransactionDao`, `TransactionRepository`, `StockViewModel`, `TransactionHistoryScreen` |
+| 6-Month Transaction Cleanup | `TransactionCleanupWorker`, `StockTransactionDao`, `InventoryApplication` |
+| Automatic Daily Offline Backup | `AutoBackupWorker`, `BackupManager`, `SettingsRepository`, `SettingsViewModel`, `SettingsScreen`, `InventoryApplication` |
 
 ## How to Build and Run
 1. Open the project in Android Studio (Giraffe/Hedgehog or newer).

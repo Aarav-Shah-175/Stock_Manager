@@ -5,7 +5,6 @@ data class BatchWithProductInfo(
     val variantId: Long,
     val productId: Long,
     val productName: String,
-    val productBrand: String,
     val variantName: String,
     val unit: String,
     val batchNumber: String,

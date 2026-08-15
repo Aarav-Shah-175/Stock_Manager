@@ -62,7 +62,7 @@ interface VariantDao {
     suspend fun updateArchiveStatus(variantId: Long, isArchived: Boolean, timestamp: Long = System.currentTimeMillis())
 
     @Query("""
-        SELECT v.id as variantId, p.id as productId, p.name as productName, p.brand as productBrand, 
+        SELECT v.id as variantId, p.id as productId, p.name as productName,
                v.name as variantName, COALESCE(SUM(b.current_quantity), 0.0) as currentStock, 
                v.min_stock_threshold as minStockThreshold, v.unit as unit
         FROM variants v

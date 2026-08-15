@@ -55,15 +55,17 @@ fun RemoveStockScreen(
 
     // Sync search query when selectedProduct changes
     LaunchedEffect(selectedProduct) {
-        productSearchQuery = selectedProduct?.let { "${it.name} — ${it.brand}" } ?: ""
+        productSearchQuery = selectedProduct?.name ?: ""
     }
 
     val filteredProducts = remember(products, productSearchQuery, selectedProduct) {
-        val selectedName = selectedProduct?.let { "${it.name} — ${it.brand}" } ?: ""
-        if (productSearchQuery == selectedName) products
-        else products.filter {
-            it.name.contains(productSearchQuery, ignoreCase = true) ||
-            it.brand.contains(productSearchQuery, ignoreCase = true)
+        val selectedName = selectedProduct?.name ?: ""
+        if (productSearchQuery == selectedName) {
+            products
+        } else {
+            products.filter {
+                it.name.contains(productSearchQuery, ignoreCase = true)
+            }
         }
     }
 
@@ -124,7 +126,7 @@ fun RemoveStockScreen(
                     ) {
                         filteredProducts.forEach { product ->
                             DropdownMenuItem(
-                                text = { Text("${product.name} — ${product.brand}") },
+                                text = { Text(product.name) },
                                 onClick = {
                                     selectedProduct = product
                                     selectedVariant = null

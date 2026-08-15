@@ -36,11 +36,14 @@ fun DashboardScreen(
     val expiringSoon by viewModel.expiringSoonBatches.collectAsState()
     val recentTx by viewModel.recentTransactions.collectAsState()
     val warningDays by viewModel.expiryWarningDays.collectAsState()
+    val companyName by viewModel.companyName.collectAsState()
+
+    val dashboardTitle = if (companyName.isNotBlank()) "Dashboard - $companyName" else "Dashboard"
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Dashboard") },
+                title = { Text(dashboardTitle) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer

@@ -22,7 +22,6 @@ data class ProductEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val name: String,
-    val brand: String,
     @ColumnInfo(name = "category_id")
     val categoryId: Long? = null,
     val description: String = "",

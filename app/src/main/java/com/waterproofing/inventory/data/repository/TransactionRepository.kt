@@ -22,6 +22,18 @@ class TransactionRepository(private val transactionDao: StockTransactionDao) {
     fun getRecentTransactions(limit: Int = 20): Flow<List<StockTransactionWithDetails>> =
         transactionDao.getRecentTransactionsWithDetailsFlow(limit)
 
+    fun searchTransactions(
+        nameQuery: String,
+        fromTimestamp: Long,
+        toTimestamp: Long
+    ): Flow<List<StockTransactionWithDetails>> =
+        transactionDao.searchTransactionsFlow(nameQuery, fromTimestamp, toTimestamp)
+
     suspend fun insert(transaction: StockTransactionEntity): Long =
         transactionDao.insert(transaction)
+
+    /** Delete transactions older than [cutoffMs]. Does NOT touch batch quantities. */
+    suspend fun deleteOldTransactions(cutoffMs: Long) {
+        transactionDao.deleteTransactionsOlderThan(cutoffMs)
+    }
 }

@@ -99,7 +99,7 @@ fun ProductListScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { viewModel.updateSearchQuery(it) },
-                placeholder = { Text("Search by name, brand, category, batch...") },
+                placeholder = { Text("Search by name, category, batch...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 singleLine = true,
                 modifier = Modifier
@@ -163,8 +163,8 @@ fun ProductListScreen(
             ProductAddEditDialog(
                 categories = categories,
                 onDismiss = { showAddDialog = false },
-                onConfirm = { name, brand, categoryId, desc ->
-                    viewModel.addProduct(name, brand, categoryId, desc)
+                onConfirm = { name, categoryId, desc ->
+                    viewModel.addProduct(name, categoryId, desc)
                     showAddDialog = false
                 }
             )
@@ -176,12 +176,11 @@ fun ProductListScreen(
                 product = product,
                 categories = categories,
                 onDismiss = { productToEdit = null },
-                onConfirm = { name, brand, categoryId, desc ->
+                onConfirm = { name, categoryId, desc ->
                     viewModel.updateProduct(
                         ProductEntity(
                             id = product.id,
                             name = name,
-                            brand = brand,
                             categoryId = categoryId,
                             description = desc,
                             isArchived = product.isArchived,
@@ -274,11 +273,6 @@ fun ProductCardItem(
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    Text(
-                        text = "Brand: ${product.brand}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.outline
-                    )
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onEdit) {
@@ -340,10 +334,9 @@ fun ProductAddEditDialog(
     product: ProductWithCategory? = null,
     categories: List<CategoryEntity>,
     onDismiss: () -> Unit,
-    onConfirm: (String, String, Long?, String) -> Unit
+    onConfirm: (String, Long?, String) -> Unit
 ) {
     var name by remember { mutableStateOf(product?.name ?: "") }
-    var brand by remember { mutableStateOf(product?.brand ?: "") }
     var desc by remember { mutableStateOf(product?.description ?: "") }
 
     var expanded by remember { mutableStateOf(false) }
@@ -366,14 +359,6 @@ fun ProductAddEditDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-                OutlinedTextField(
-                    value = brand,
-                    onValueChange = { brand = it },
-                    label = { Text("Brand*") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
                 // Category dropdown selector
                 ExposedDropdownMenuBox(
                     expanded = expanded,
@@ -425,8 +410,8 @@ fun ProductAddEditDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    if (name.isNotBlank() && brand.isNotBlank()) {
-                        onConfirm(name, brand, selectedCategory?.id, desc)
+                    if (name.isNotBlank()) {
+                        onConfirm(name, selectedCategory?.id, desc)
                     }
                 }
             ) {

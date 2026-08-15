@@ -102,15 +102,30 @@ fun VariantDetailScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(
-                                text = "Total Stock: ${v.totalStock} ${v.unit}",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                          /*  Text(
-                                text = "Min Alert: ${v.minStockThreshold} ${v.unit}",
-                                style = MaterialTheme.typography.bodyMedium
-                            ) */
+                            Column {
+                                Text(
+                                    text = "Total Stock",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "${v.totalStock} ${v.unit}",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                           /* Column(horizontalAlignment = Alignment.End) {
+                                Text(
+                                    text = "Minimum Stock",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "${v.minStockThreshold} ${v.unit}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.outline
+                                )
+                            } */
                         }
                     }
                 }

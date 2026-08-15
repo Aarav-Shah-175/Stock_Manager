@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -71,6 +72,41 @@ class StockViewModel(
         transactionRepository.getAllTransactions()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // Transaction History Search & Filter State
+    val searchQuery = MutableStateFlow("")
+    val fromDateMillis = MutableStateFlow<Long?>(null)
+    val toDateMillis = MutableStateFlow<Long?>(null)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val searchedTransactions: StateFlow<List<StockTransactionWithDetails>> = combine(
+        searchQuery,
+        fromDateMillis,
+        toDateMillis
+    ) { query, fromMs, toMs ->
+        Triple(query, fromMs, toMs)
+    }.flatMapLatest { (query, fromMs, toMs) ->
+        val namePattern = if (query.isBlank()) "%" else "%${query.trim()}%"
+        val start = fromMs ?: 0L
+        // Include full day of toMs if specified
+        val end = toMs?.let { it + 86_399_999L } ?: Long.MAX_VALUE
+        transactionRepository.searchTransactions(namePattern, start, end)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun updateSearchQuery(query: String) {
+        searchQuery.value = query
+    }
+
+    fun setDateRange(fromMs: Long?, toMs: Long?) {
+        fromDateMillis.value = fromMs
+        toDateMillis.value = toMs
+    }
+
+    fun clearSearchFilters() {
+        searchQuery.value = ""
+        fromDateMillis.value = null
+        toDateMillis.value = null
+    }
+
     fun selectProduct(productId: Long?) {
         _selectedProductId.value = productId
         _selectedVariantId.value = null
@@ -81,10 +117,6 @@ class StockViewModel(
     }
 
     // ---- STOCK IN -------------------------------------------------------
-    /**
-     * Record a Stock IN on an existing batch.
-     * Atomically increments batch.currentQuantity and inserts an IN transaction.
-     */
     fun stockIn(
         batchId: Long,
         variantId: Long,
@@ -129,10 +161,6 @@ class StockViewModel(
     }
 
     // ---- STOCK OUT (FEFO) -----------------------------------------------
-    /**
-     * Record a Stock OUT from a specific batch.
-     * Validates sufficient quantity, decrements batch, inserts OUT transaction.
-     */
     fun stockOut(
         batchId: Long,
         variantId: Long,

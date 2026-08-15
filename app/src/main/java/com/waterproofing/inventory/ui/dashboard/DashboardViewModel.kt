@@ -44,6 +44,10 @@ class DashboardViewModel(
         settingsRepository.getExpiryWarningDaysFlow()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 90)
 
+    val companyName: StateFlow<String> =
+        settingsRepository.getCompanyNameFlow()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val expiringSoonBatches: StateFlow<List<BatchWithProductInfo>> =
         settingsRepository.getExpiryWarningDaysFlow()

@@ -6,7 +6,6 @@ data class StockTransactionWithDetails(
     val productId: Long,
     val variantId: Long,
     val productName: String,
-    val productBrand: String,
     val variantName: String,
     val batchNumber: String,
     val transactionType: String,

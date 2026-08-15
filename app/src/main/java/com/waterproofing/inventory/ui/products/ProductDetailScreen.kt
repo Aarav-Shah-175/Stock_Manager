@@ -124,11 +124,6 @@ fun ProductDetailScreen(
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold
                         )
-                        Text(
-                            text = "Brand: ${prod.brand}",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
                         prod.categoryName?.let { cat ->
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
@@ -344,13 +339,13 @@ fun VariantCardItem(
             ) {
                 Column {
                     Text(
-                        text = "Total Stock: ${variant.totalStock} units",
+                        text = "Total Stock: ${variant.totalStock} ${variant.unit}",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = if (isLowStock) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Minimum Stock: ${variant.minStockThreshold} units",
+                        text = "Minimum Stock: ${variant.minStockThreshold} ${variant.unit}",
                         style = MaterialTheme.typography.bodySmall,
                         color = if (isLowStock) MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.outline
                     )

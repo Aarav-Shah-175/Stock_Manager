@@ -18,11 +18,10 @@ class ProductRepository(private val productDao: ProductDao) {
         return productDao.getProductById(productId)
     }
 
-    suspend fun insert(name: String, brand: String, categoryId: Long?, description: String): Long {
+    suspend fun insert(name: String, categoryId: Long?, description: String): Long {
         return productDao.insert(
             ProductEntity(
                 name = name.trim(),
-                brand = brand.trim(),
                 categoryId = categoryId,
                 description = description.trim()
             )
@@ -33,7 +32,6 @@ class ProductRepository(private val productDao: ProductDao) {
         productDao.update(
             product.copy(
                 name = product.name.trim(),
-                brand = product.brand.trim(),
                 description = product.description.trim(),
                 updatedAt = System.currentTimeMillis()
             )

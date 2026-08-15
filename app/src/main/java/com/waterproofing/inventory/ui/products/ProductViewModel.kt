@@ -43,17 +43,17 @@ class ProductViewModel(
         searchQuery.value = query
     }
 
-    fun addProduct(name: String, brand: String, categoryId: Long?, description: String) {
+    fun addProduct(name: String, categoryId: Long?, description: String) {
         viewModelScope.launch {
-            if (name.isNotBlank() && brand.isNotBlank()) {
-                productRepository.insert(name, brand, categoryId, description)
+            if (name.isNotBlank()) {
+                productRepository.insert(name, categoryId, description)
             }
         }
     }
 
     fun updateProduct(product: ProductEntity) {
         viewModelScope.launch {
-            if (product.name.isNotBlank() && product.brand.isNotBlank()) {
+            if (product.name.isNotBlank()) {
                 productRepository.update(product)
             }
         }

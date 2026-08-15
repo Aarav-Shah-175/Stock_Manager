@@ -15,7 +15,7 @@ interface StockTransactionDao {
 
     @Query("""
         SELECT t.id, t.batch_id as batchId, t.product_id as productId, t.variant_id as variantId, 
-               p.name as productName, p.brand as productBrand, v.name as variantName, 
+               p.name as productName, v.name as variantName, 
                b.batch_number as batchNumber, t.transaction_type as transactionType, 
                t.quantity, t.unit, t.timestamp, t.reason, t.customer_project as customerProject, 
                t.invoice_number as invoiceNumber, t.notes
@@ -29,7 +29,7 @@ interface StockTransactionDao {
 
     @Query("""
         SELECT t.id, t.batch_id as batchId, t.product_id as productId, t.variant_id as variantId, 
-               p.name as productName, p.brand as productBrand, v.name as variantName, 
+               p.name as productName, v.name as variantName, 
                b.batch_number as batchNumber, t.transaction_type as transactionType, 
                t.quantity, t.unit, t.timestamp, t.reason, t.customer_project as customerProject, 
                t.invoice_number as invoiceNumber, t.notes
@@ -44,7 +44,7 @@ interface StockTransactionDao {
 
     @Query("""
         SELECT t.id, t.batch_id as batchId, t.product_id as productId, t.variant_id as variantId, 
-               p.name as productName, p.brand as productBrand, v.name as variantName, 
+               p.name as productName, v.name as variantName, 
                b.batch_number as batchNumber, t.transaction_type as transactionType, 
                t.quantity, t.unit, t.timestamp, t.reason, t.customer_project as customerProject, 
                t.invoice_number as invoiceNumber, t.notes
@@ -59,7 +59,7 @@ interface StockTransactionDao {
 
     @Query("""
         SELECT t.id, t.batch_id as batchId, t.product_id as productId, t.variant_id as variantId, 
-               p.name as productName, p.brand as productBrand, v.name as variantName, 
+               p.name as productName, v.name as variantName, 
                b.batch_number as batchNumber, t.transaction_type as transactionType, 
                t.quantity, t.unit, t.timestamp, t.reason, t.customer_project as customerProject, 
                t.invoice_number as invoiceNumber, t.notes
@@ -74,7 +74,7 @@ interface StockTransactionDao {
 
     @Query("""
         SELECT t.id, t.batch_id as batchId, t.product_id as productId, t.variant_id as variantId, 
-               p.name as productName, p.brand as productBrand, v.name as variantName, 
+               p.name as productName, v.name as variantName, 
                b.batch_number as batchNumber, t.transaction_type as transactionType, 
                t.quantity, t.unit, t.timestamp, t.reason, t.customer_project as customerProject, 
                t.invoice_number as invoiceNumber, t.notes
@@ -86,4 +86,36 @@ interface StockTransactionDao {
         LIMIT :limit
     """)
     fun getRecentTransactionsWithDetailsFlow(limit: Int): Flow<List<StockTransactionWithDetails>>
+
+    /**
+     * Search transactions by product/variant name and optional date range.
+     * Pass nameQuery as "%" to match all names.
+     * Pass fromTimestamp=0 and toTimestamp=Long.MAX_VALUE to skip date filter.
+     * Excludes ADJUSTMENT records.
+     */
+    @Query("""
+        SELECT t.id, t.batch_id as batchId, t.product_id as productId, t.variant_id as variantId, 
+               p.name as productName, v.name as variantName, 
+               b.batch_number as batchNumber, t.transaction_type as transactionType, 
+               t.quantity, t.unit, t.timestamp, t.reason, t.customer_project as customerProject, 
+               t.invoice_number as invoiceNumber, t.notes
+        FROM stock_transactions t
+        JOIN batches b ON t.batch_id = b.id
+        JOIN variants v ON t.variant_id = v.id
+        JOIN products p ON t.product_id = p.id
+        WHERE t.transaction_type != 'ADJUSTMENT'
+          AND (p.name LIKE :nameQuery OR v.name LIKE :nameQuery)
+          AND t.timestamp >= :fromTimestamp
+          AND t.timestamp <= :toTimestamp
+        ORDER BY t.timestamp DESC, t.id DESC
+    """)
+    fun searchTransactionsFlow(
+        nameQuery: String,
+        fromTimestamp: Long,
+        toTimestamp: Long
+    ): Flow<List<StockTransactionWithDetails>>
+
+    /** Delete all transactions older than the given timestamp (used for 6-month retention). */
+    @Query("DELETE FROM stock_transactions WHERE timestamp < :cutoffTimestamp")
+    suspend fun deleteTransactionsOlderThan(cutoffTimestamp: Long)
 }

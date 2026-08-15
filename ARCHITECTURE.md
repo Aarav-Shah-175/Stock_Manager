@@ -22,7 +22,7 @@ Repositories (Data Abstraction / Operations)
 Room DAOs & SQLite Database
 ```
 
-## Database Schema and Relationships
+## Database Schema and Relationships (DB Version 3)
 
 ### 1. Categories (`CategoryEntity`)
 - `id` (Long, Primary Key, Auto-increment)
@@ -33,12 +33,13 @@ Room DAOs & SQLite Database
 ### 2. Products (`ProductEntity`)
 - `id` (Long, Primary Key, Auto-increment)
 - `name` (String)
-- `brand` (String)
 - `category_id` (Long?, Foreign Key to `CategoryEntity.id`, ON DELETE SET NULL)
 - `description` (String)
 - `is_archived` (Boolean, Default: false)
 - `created_at` (Long)
 - `updated_at` (Long)
+
+*(Note: `brand` column dropped in DB migration v2→v3)*
 
 ### 3. Variants (`VariantEntity`)
 - `id` (Long, Primary Key, Auto-increment)
@@ -50,6 +51,8 @@ Room DAOs & SQLite Database
 - `is_archived` (Boolean, Default: false)
 - `created_at` (Long)
 - `updated_at` (Long)
+
+*(Note: `sku` column dropped in DB migration v1→v2)*
 
 ### 4. Batches (`BatchEntity`)
 - `id` (Long, Primary Key, Auto-increment)
@@ -83,23 +86,8 @@ Room DAOs & SQLite Database
 - `notes` (String?)
 - `created_at` (Long)
 
-## Critical Business Logic Flow
+## Background Tasks (WorkManager)
 
-### 1. Adding Stock
-1. User provides batch details (batch #, quantity, dates, etc.).
-2. Database checks if batch exists. If yes, updates quantity. If no, creates new Batch.
-3. Database inserts transaction record with type `IN` and details.
-4. Performed atomically using `@Transaction`.
-
-### 2. FEFO Stock Removal (First Expire, First Out)
-1. User specifies Product, Variant, and Quantity to remove.
-2. Query variant's active batches, sorted by `expiry_date` ascending.
-3. Select batches sequentially starting from the top.
-4. Auto-recommend batch selections matching required quantity.
-5. User can override batch selection.
-6. Verify selected batch(es) have sufficient quantity to prevent negative stock.
-7. Decrement batch quantity and insert `OUT` transaction(s) atomically.
-
-### 3. Expiry & Shelf Life Calculations
-- **Dynamic:** Expiry Date = Manufacturing Date + (Shelf Life Value in Shelf Life Units).
-- Supports manual override. Direct manual edits to `expiry_date` are preserved and will not be overwritten by recalculation unless requested.
+1. **ExpiryNotificationWorker:** Daily periodic check for batches expiring within 30 days.
+2. **TransactionCleanupWorker:** Daily periodic purge of stock transactions older than 6 calendar months. Does not alter stock quantities.
+3. **AutoBackupWorker:** Scheduled daily offline database backup. Writes to app-internal storage (`filesDir/backups`), enforces configurable retention (default 7 backups), and sends completion/failure notifications.

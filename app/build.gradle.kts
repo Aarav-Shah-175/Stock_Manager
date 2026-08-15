@@ -85,6 +85,9 @@ dependencies {
     // WorkManager (Expiry notifications background worker)
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
+    // DocumentFile (SAF custom folder backup)
+    implementation("androidx.documentfile:documentfile:1.0.1")
+
     // Local JVM & Instrumentation Tests
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

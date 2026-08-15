@@ -35,7 +35,7 @@ interface BatchDao {
 
     @Query("""
         SELECT b.id, b.variant_id as variantId, p.id as productId, p.name as productName, 
-               p.brand as productBrand, v.name as variantName, v.unit as unit, 
+               v.name as variantName, v.unit as unit, 
                b.batch_number as batchNumber, b.current_quantity as currentQuantity, 
                b.mfg_date as mfgDate, b.shelf_life_value as shelfLifeValue, 
                b.shelf_life_unit as shelfLifeUnit, b.expiry_date as expiryDate, 
@@ -53,7 +53,7 @@ interface BatchDao {
 
     @Query("""
         SELECT b.id, b.variant_id as variantId, p.id as productId, p.name as productName, 
-               p.brand as productBrand, v.name as variantName, v.unit as unit, 
+               v.name as variantName, v.unit as unit, 
                b.batch_number as batchNumber, b.current_quantity as currentQuantity, 
                b.mfg_date as mfgDate, b.shelf_life_value as shelfLifeValue, 
                b.shelf_life_unit as shelfLifeUnit, b.expiry_date as expiryDate, 
@@ -69,7 +69,7 @@ interface BatchDao {
 
     @Query("""
         SELECT b.id, b.variant_id as variantId, p.id as productId, p.name as productName, 
-               p.brand as productBrand, v.name as variantName, v.unit as unit, 
+               v.name as variantName, v.unit as unit, 
                b.batch_number as batchNumber, b.current_quantity as currentQuantity, 
                b.mfg_date as mfgDate, b.shelf_life_value as shelfLifeValue, 
                b.shelf_life_unit as shelfLifeUnit, b.expiry_date as expiryDate, 
@@ -85,7 +85,7 @@ interface BatchDao {
 
     @Query("""
         SELECT b.id, b.variant_id as variantId, p.id as productId, p.name as productName, 
-               p.brand as productBrand, v.name as variantName, v.unit as unit, 
+               v.name as variantName, v.unit as unit, 
                b.batch_number as batchNumber, b.current_quantity as currentQuantity, 
                b.mfg_date as mfgDate, b.shelf_life_value as shelfLifeValue, 
                b.shelf_life_unit as shelfLifeUnit, b.expiry_date as expiryDate, 
@@ -129,7 +129,7 @@ interface BatchDao {
     /** One-shot (non-Flow) query used by the background notification worker. */
     @Query("""
         SELECT b.id, b.variant_id as variantId, p.id as productId, p.name as productName, 
-               p.brand as productBrand, v.name as variantName, v.unit as unit, 
+               v.name as variantName, v.unit as unit, 
                b.batch_number as batchNumber, b.current_quantity as currentQuantity, 
                b.mfg_date as mfgDate, b.shelf_life_value as shelfLifeValue, 
                b.shelf_life_unit as shelfLifeUnit, b.expiry_date as expiryDate, 
