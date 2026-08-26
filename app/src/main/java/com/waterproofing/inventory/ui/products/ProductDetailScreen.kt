@@ -383,9 +383,9 @@ fun VariantAddEditDialog(
     onConfirm: (name: String, quantityValue: Double, unit: String, minStockThreshold: Double) -> Unit
 ) {
     var name by remember { mutableStateOf(variant?.name ?: "") }
-    var qValueStr by remember { mutableStateOf(variant?.quantityValue?.toString() ?: "") }
     var unit by remember { mutableStateOf(variant?.unit ?: "") }
-    var thresholdStr by remember { mutableStateOf(variant?.minStockThreshold?.toString() ?: "") }
+    var thresholdStr by remember { mutableStateOf(variant?.minStockThreshold?.let { if (it > 0.0) it.toString() else "" } ?: "") }
+    var showError by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -397,29 +397,32 @@ fun VariantAddEditDialog(
             ) {
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Variant Name* (e.g. 5 kg, 20L)") },
+                    onValueChange = { 
+                        name = it
+                        if (it.isNotBlank()) showError = false
+                    },
+                    label = { Text("Variant Name* (e.g. 5 kg bucket, 20L drum)") },
+                    isError = showError && name.isBlank(),
+                    supportingText = if (showError && name.isBlank()) {
+                        { Text("Variant name is required", color = MaterialTheme.colorScheme.error) }
+                    } else null,
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-                Row(modifier = Modifier.fillMaxWidth()) {
-                   /* OutlinedTextField(
-                        value = qValueStr,
-                        onValueChange = { qValueStr = it },
-                        label = { Text("Qty Value* (e.g. 5, 20)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        singleLine = true,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))*/
-                    OutlinedTextField(
-                        value = unit,
-                        onValueChange = { unit = it },
-                        label = { Text("Unit* (e.g. Bucket, Can)") },
-                        singleLine = true,
-                        modifier = Modifier.weight(1f)
-                    )
-                } 
+                OutlinedTextField(
+                    value = unit,
+                    onValueChange = { 
+                        unit = it
+                        if (it.isNotBlank()) showError = false
+                    },
+                    label = { Text("Unit* (e.g. Bucket, Can, kg, L)") },
+                    isError = showError && unit.isBlank(),
+                    supportingText = if (showError && unit.isBlank()) {
+                        { Text("Unit is required", color = MaterialTheme.colorScheme.error) }
+                    } else null,
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
                 OutlinedTextField(
                     value = thresholdStr,
                     onValueChange = { thresholdStr = it },
@@ -433,10 +436,12 @@ fun VariantAddEditDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    val qValue = qValueStr.toDoubleOrNull() ?: 0.0
                     val threshold = thresholdStr.toDoubleOrNull() ?: 0.0
-                    if (name.isNotBlank() && unit.isNotBlank() && qValue > 0.0) {
-                        onConfirm(name, qValue, unit, threshold)
+                    val qValue = variant?.quantityValue ?: 1.0
+                    if (name.isNotBlank() && unit.isNotBlank()) {
+                        onConfirm(name.trim(), qValue, unit.trim(), threshold)
+                    } else {
+                        showError = true
                     }
                 }
             ) {

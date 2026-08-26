@@ -74,6 +74,7 @@ class ProductDetailViewModel(
     fun deleteProduct(onSuccess: () -> Unit) {
         val pid = productIdState.value ?: return
         viewModelScope.launch {
+            productIdState.value = null
             productRepository.deleteProduct(pid)
             onSuccess()
         }

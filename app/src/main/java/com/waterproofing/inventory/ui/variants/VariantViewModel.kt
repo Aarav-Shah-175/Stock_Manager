@@ -117,6 +117,7 @@ class VariantViewModel(
     fun deleteVariant(onSuccess: () -> Unit) {
         val vid = variantIdState.value ?: return
         viewModelScope.launch {
+            variantIdState.value = null
             variantRepository.deleteVariant(vid)
             onSuccess()
         }

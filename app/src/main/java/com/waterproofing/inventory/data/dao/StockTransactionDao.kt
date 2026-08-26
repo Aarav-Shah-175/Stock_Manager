@@ -15,28 +15,32 @@ interface StockTransactionDao {
 
     @Query("""
         SELECT t.id, t.batch_id as batchId, t.product_id as productId, t.variant_id as variantId, 
-               p.name as productName, v.name as variantName, 
-               b.batch_number as batchNumber, t.transaction_type as transactionType, 
+               COALESCE(NULLIF(p.name, ''), NULLIF(t.product_name, ''), 'Deleted Product') as productName, 
+               COALESCE(NULLIF(v.name, ''), NULLIF(t.variant_name, ''), 'Deleted Variant') as variantName, 
+               COALESCE(NULLIF(b.batch_number, ''), NULLIF(t.batch_number, ''), 'N/A') as batchNumber, 
+               t.transaction_type as transactionType, 
                t.quantity, t.unit, t.timestamp, t.reason, t.customer_project as customerProject, 
                t.invoice_number as invoiceNumber, t.notes
         FROM stock_transactions t
-        JOIN batches b ON t.batch_id = b.id
-        JOIN variants v ON t.variant_id = v.id
-        JOIN products p ON t.product_id = p.id
+        LEFT JOIN batches b ON t.batch_id = b.id
+        LEFT JOIN variants v ON t.variant_id = v.id
+        LEFT JOIN products p ON t.product_id = p.id
         ORDER BY t.timestamp DESC, t.id DESC
     """)
     fun getAllTransactionsWithDetailsFlow(): Flow<List<StockTransactionWithDetails>>
 
     @Query("""
         SELECT t.id, t.batch_id as batchId, t.product_id as productId, t.variant_id as variantId, 
-               p.name as productName, v.name as variantName, 
-               b.batch_number as batchNumber, t.transaction_type as transactionType, 
+               COALESCE(NULLIF(p.name, ''), NULLIF(t.product_name, ''), 'Deleted Product') as productName, 
+               COALESCE(NULLIF(v.name, ''), NULLIF(t.variant_name, ''), 'Deleted Variant') as variantName, 
+               COALESCE(NULLIF(b.batch_number, ''), NULLIF(t.batch_number, ''), 'N/A') as batchNumber, 
+               t.transaction_type as transactionType, 
                t.quantity, t.unit, t.timestamp, t.reason, t.customer_project as customerProject, 
                t.invoice_number as invoiceNumber, t.notes
         FROM stock_transactions t
-        JOIN batches b ON t.batch_id = b.id
-        JOIN variants v ON t.variant_id = v.id
-        JOIN products p ON t.product_id = p.id
+        LEFT JOIN batches b ON t.batch_id = b.id
+        LEFT JOIN variants v ON t.variant_id = v.id
+        LEFT JOIN products p ON t.product_id = p.id
         WHERE t.product_id = :productId
         ORDER BY t.timestamp DESC, t.id DESC
     """)
@@ -44,14 +48,16 @@ interface StockTransactionDao {
 
     @Query("""
         SELECT t.id, t.batch_id as batchId, t.product_id as productId, t.variant_id as variantId, 
-               p.name as productName, v.name as variantName, 
-               b.batch_number as batchNumber, t.transaction_type as transactionType, 
+               COALESCE(NULLIF(p.name, ''), NULLIF(t.product_name, ''), 'Deleted Product') as productName, 
+               COALESCE(NULLIF(v.name, ''), NULLIF(t.variant_name, ''), 'Deleted Variant') as variantName, 
+               COALESCE(NULLIF(b.batch_number, ''), NULLIF(t.batch_number, ''), 'N/A') as batchNumber, 
+               t.transaction_type as transactionType, 
                t.quantity, t.unit, t.timestamp, t.reason, t.customer_project as customerProject, 
                t.invoice_number as invoiceNumber, t.notes
         FROM stock_transactions t
-        JOIN batches b ON t.batch_id = b.id
-        JOIN variants v ON t.variant_id = v.id
-        JOIN products p ON t.product_id = p.id
+        LEFT JOIN batches b ON t.batch_id = b.id
+        LEFT JOIN variants v ON t.variant_id = v.id
+        LEFT JOIN products p ON t.product_id = p.id
         WHERE t.variant_id = :variantId
         ORDER BY t.timestamp DESC, t.id DESC
     """)
@@ -59,14 +65,16 @@ interface StockTransactionDao {
 
     @Query("""
         SELECT t.id, t.batch_id as batchId, t.product_id as productId, t.variant_id as variantId, 
-               p.name as productName, v.name as variantName, 
-               b.batch_number as batchNumber, t.transaction_type as transactionType, 
+               COALESCE(NULLIF(p.name, ''), NULLIF(t.product_name, ''), 'Deleted Product') as productName, 
+               COALESCE(NULLIF(v.name, ''), NULLIF(t.variant_name, ''), 'Deleted Variant') as variantName, 
+               COALESCE(NULLIF(b.batch_number, ''), NULLIF(t.batch_number, ''), 'N/A') as batchNumber, 
+               t.transaction_type as transactionType, 
                t.quantity, t.unit, t.timestamp, t.reason, t.customer_project as customerProject, 
                t.invoice_number as invoiceNumber, t.notes
         FROM stock_transactions t
-        JOIN batches b ON t.batch_id = b.id
-        JOIN variants v ON t.variant_id = v.id
-        JOIN products p ON t.product_id = p.id
+        LEFT JOIN batches b ON t.batch_id = b.id
+        LEFT JOIN variants v ON t.variant_id = v.id
+        LEFT JOIN products p ON t.product_id = p.id
         WHERE t.batch_id = :batchId
         ORDER BY t.timestamp DESC, t.id DESC
     """)
@@ -74,14 +82,16 @@ interface StockTransactionDao {
 
     @Query("""
         SELECT t.id, t.batch_id as batchId, t.product_id as productId, t.variant_id as variantId, 
-               p.name as productName, v.name as variantName, 
-               b.batch_number as batchNumber, t.transaction_type as transactionType, 
+               COALESCE(NULLIF(p.name, ''), NULLIF(t.product_name, ''), 'Deleted Product') as productName, 
+               COALESCE(NULLIF(v.name, ''), NULLIF(t.variant_name, ''), 'Deleted Variant') as variantName, 
+               COALESCE(NULLIF(b.batch_number, ''), NULLIF(t.batch_number, ''), 'N/A') as batchNumber, 
+               t.transaction_type as transactionType, 
                t.quantity, t.unit, t.timestamp, t.reason, t.customer_project as customerProject, 
                t.invoice_number as invoiceNumber, t.notes
         FROM stock_transactions t
-        JOIN batches b ON t.batch_id = b.id
-        JOIN variants v ON t.variant_id = v.id
-        JOIN products p ON t.product_id = p.id
+        LEFT JOIN batches b ON t.batch_id = b.id
+        LEFT JOIN variants v ON t.variant_id = v.id
+        LEFT JOIN products p ON t.product_id = p.id
         ORDER BY t.timestamp DESC, t.id DESC
         LIMIT :limit
     """)
@@ -95,16 +105,22 @@ interface StockTransactionDao {
      */
     @Query("""
         SELECT t.id, t.batch_id as batchId, t.product_id as productId, t.variant_id as variantId, 
-               p.name as productName, v.name as variantName, 
-               b.batch_number as batchNumber, t.transaction_type as transactionType, 
+               COALESCE(NULLIF(p.name, ''), NULLIF(t.product_name, ''), 'Deleted Product') as productName, 
+               COALESCE(NULLIF(v.name, ''), NULLIF(t.variant_name, ''), 'Deleted Variant') as variantName, 
+               COALESCE(NULLIF(b.batch_number, ''), NULLIF(t.batch_number, ''), 'N/A') as batchNumber, 
+               t.transaction_type as transactionType, 
                t.quantity, t.unit, t.timestamp, t.reason, t.customer_project as customerProject, 
                t.invoice_number as invoiceNumber, t.notes
         FROM stock_transactions t
-        JOIN batches b ON t.batch_id = b.id
-        JOIN variants v ON t.variant_id = v.id
-        JOIN products p ON t.product_id = p.id
+        LEFT JOIN batches b ON t.batch_id = b.id
+        LEFT JOIN variants v ON t.variant_id = v.id
+        LEFT JOIN products p ON t.product_id = p.id
         WHERE t.transaction_type != 'ADJUSTMENT'
-          AND (p.name LIKE :nameQuery OR v.name LIKE :nameQuery)
+          AND (
+               COALESCE(NULLIF(p.name, ''), NULLIF(t.product_name, '')) LIKE :nameQuery 
+               OR COALESCE(NULLIF(v.name, ''), NULLIF(t.variant_name, '')) LIKE :nameQuery
+               OR COALESCE(NULLIF(b.batch_number, ''), NULLIF(t.batch_number, '')) LIKE :nameQuery
+              )
           AND t.timestamp >= :fromTimestamp
           AND t.timestamp <= :toTimestamp
         ORDER BY t.timestamp DESC, t.id DESC

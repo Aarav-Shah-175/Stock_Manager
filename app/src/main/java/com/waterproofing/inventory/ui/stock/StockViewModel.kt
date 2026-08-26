@@ -140,11 +140,17 @@ class StockViewModel(
                 )
                 batchRepository.updateBatch(updated)
 
+                val product = productRepository.getProductById(productId)
+                val variant = variantRepository.getVariantById(variantId)
+
                 transactionRepository.insert(
                     StockTransactionEntity(
                         batchId = batchId,
                         variantId = variantId,
                         productId = productId,
+                        productName = product?.name ?: "",
+                        variantName = variant?.name ?: "",
+                        batchNumber = batch.batchNumber,
                         transactionType = "IN",
                         quantity = quantity,
                         unit = unit,
@@ -194,11 +200,17 @@ class StockViewModel(
                 )
                 batchRepository.updateBatch(updated)
 
+                val product = productRepository.getProductById(productId)
+                val variant = variantRepository.getVariantById(variantId)
+
                 transactionRepository.insert(
                     StockTransactionEntity(
                         batchId = batchId,
                         variantId = variantId,
                         productId = productId,
+                        productName = product?.name ?: "",
+                        variantName = variant?.name ?: "",
+                        batchNumber = batch.batchNumber,
                         transactionType = "OUT",
                         quantity = quantity,
                         unit = unit,
@@ -239,11 +251,17 @@ class StockViewModel(
                 )
                 batchRepository.updateBatch(updated)
 
+                val product = productRepository.getProductById(productId)
+                val variant = variantRepository.getVariantById(variantId)
+
                 transactionRepository.insert(
                     StockTransactionEntity(
                         batchId = batchId,
                         variantId = variantId,
                         productId = productId,
+                        productName = product?.name ?: "",
+                        variantName = variant?.name ?: "",
+                        batchNumber = batch.batchNumber,
                         transactionType = "ADJUSTMENT",
                         quantity = delta,
                         unit = unit,

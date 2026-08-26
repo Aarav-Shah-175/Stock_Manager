@@ -15,17 +15,8 @@ interface BatchDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(batch: BatchEntity): Long
 
-    @Query("DELETE FROM stock_transactions WHERE batch_id = :batchId")
-    suspend fun deleteTransactionsByBatchId(batchId: Long)
-
     @Query("DELETE FROM batches WHERE id = :batchId")
-    suspend fun deleteBatchByIdOnly(batchId: Long)
-
-    @Transaction
-    suspend fun deleteBatch(batchId: Long) {
-        deleteTransactionsByBatchId(batchId)
-        deleteBatchByIdOnly(batchId)
-    }
+    suspend fun deleteBatch(batchId: Long)
 
     @Update
     suspend fun update(batch: BatchEntity)

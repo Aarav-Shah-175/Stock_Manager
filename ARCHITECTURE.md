@@ -22,7 +22,10 @@ Repositories (Data Abstraction / Operations)
 Room DAOs & SQLite Database
 ```
 
-## Database Schema and Relationships (DB Version 3)
+## Database Schema and Relationships (DB Version 4)
+
+### Core Architectural Invariant
+> **Historical transactions are independent records and must survive deletion of their associated Product, Variant, or Batch.**
 
 ### 1. Categories (`CategoryEntity`)
 - `id` (Long, Primary Key, Auto-increment)
@@ -73,9 +76,12 @@ Room DAOs & SQLite Database
 
 ### 5. Stock Transactions (`StockTransactionEntity`)
 - `id` (Long, Primary Key, Auto-increment)
-- `batch_id` (Long, Foreign Key to `BatchEntity.id`, ON DELETE RESTRICT)
-- `product_id` (Long, Foreign Key to `ProductEntity.id`, ON DELETE RESTRICT)
-- `variant_id` (Long, Foreign Key to `VariantEntity.id`, ON DELETE RESTRICT)
+- `batch_id` (Long?, Foreign Key to `BatchEntity.id`, ON DELETE SET NULL)
+- `product_id` (Long?, Foreign Key to `ProductEntity.id`, ON DELETE SET NULL)
+- `variant_id` (Long?, Foreign Key to `VariantEntity.id`, ON DELETE SET NULL)
+- `product_name` (String, Snapshot at creation)
+- `variant_name` (String, Snapshot at creation)
+- `batch_number` (String, Snapshot at creation)
 - `transaction_type` (String: "IN", "OUT", "ADJUSTMENT")
 - `quantity` (Double)
 - `unit` (String)
@@ -85,6 +91,8 @@ Room DAOs & SQLite Database
 - `invoice_number` (String?)
 - `notes` (String?)
 - `created_at` (Long)
+
+*(Note: `ON DELETE SET NULL` and snapshot fields added in DB migration v3→v4)*
 
 ## Background Tasks (WorkManager)
 

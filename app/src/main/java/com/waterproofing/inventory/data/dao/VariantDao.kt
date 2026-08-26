@@ -16,17 +16,8 @@ interface VariantDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(variant: VariantEntity): Long
 
-    @Query("DELETE FROM stock_transactions WHERE variant_id = :variantId")
-    suspend fun deleteTransactionsByVariantId(variantId: Long)
-
     @Query("DELETE FROM variants WHERE id = :variantId")
-    suspend fun deleteVariantByIdOnly(variantId: Long)
-
-    @Transaction
-    suspend fun deleteVariant(variantId: Long) {
-        deleteTransactionsByVariantId(variantId)
-        deleteVariantByIdOnly(variantId)
-    }
+    suspend fun deleteVariant(variantId: Long)
 
     @Update
     suspend fun update(variant: VariantEntity)
@@ -52,6 +43,7 @@ interface VariantDao {
         FROM variants v 
         LEFT JOIN batches b ON v.id = b.variant_id
         WHERE v.id = :variantId
+        GROUP BY v.id
     """)
     fun getVariantWithStockFlow(variantId: Long): Flow<VariantWithStock?>
 

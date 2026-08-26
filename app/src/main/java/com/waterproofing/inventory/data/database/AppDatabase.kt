@@ -26,7 +26,7 @@ import com.waterproofing.inventory.data.entity.VariantEntity
         StockTransactionEntity::class,
         AppSettingsEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -101,6 +101,69 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** v3 → v4: Preserve historical stock transactions on Product/Variant/Batch deletion (SET NULL + snapshot fields). */
+        private val MIGRATION_3_4 = object : androidx.room.migration.Migration(3, 4) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                // 1. Create new stock_transactions table with nullable FKs and snapshot columns
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `stock_transactions_new` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `batch_id` INTEGER,
+                        `product_id` INTEGER,
+                        `variant_id` INTEGER,
+                        `product_name` TEXT NOT NULL DEFAULT '',
+                        `variant_name` TEXT NOT NULL DEFAULT '',
+                        `batch_number` TEXT NOT NULL DEFAULT '',
+                        `transaction_type` TEXT NOT NULL,
+                        `quantity` REAL NOT NULL,
+                        `unit` TEXT NOT NULL,
+                        `timestamp` INTEGER NOT NULL,
+                        `reason` TEXT NOT NULL,
+                        `customer_project` TEXT,
+                        `invoice_number` TEXT,
+                        `notes` TEXT,
+                        `created_at` INTEGER NOT NULL DEFAULT 0,
+                        FOREIGN KEY(`batch_id`) REFERENCES `batches`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL,
+                        FOREIGN KEY(`product_id`) REFERENCES `products`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL,
+                        FOREIGN KEY(`variant_id`) REFERENCES `variants`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL
+                    )
+                """)
+
+                // 2. Copy existing transactions, populating product_name, variant_name, batch_number from existing tables
+                db.execSQL("""
+                    INSERT INTO `stock_transactions_new` (
+                        `id`, `batch_id`, `product_id`, `variant_id`, 
+                        `product_name`, `variant_name`, `batch_number`, 
+                        `transaction_type`, `quantity`, `unit`, `timestamp`, 
+                        `reason`, `customer_project`, `invoice_number`, `notes`, `created_at`
+                    )
+                    SELECT 
+                        t.`id`, t.`batch_id`, t.`product_id`, t.`variant_id`, 
+                        COALESCE(p.`name`, '') AS `product_name`, 
+                        COALESCE(v.`name`, '') AS `variant_name`, 
+                        COALESCE(b.`batch_number`, '') AS `batch_number`, 
+                        t.`transaction_type`, t.`quantity`, t.`unit`, t.`timestamp`, 
+                        t.`reason`, t.`customer_project`, t.`invoice_number`, t.`notes`, t.`created_at`
+                    FROM `stock_transactions` t
+                    LEFT JOIN `products` p ON t.`product_id` = p.`id`
+                    LEFT JOIN `variants` v ON t.`variant_id` = v.`id`
+                    LEFT JOIN `batches` b ON t.`batch_id` = b.`id`
+                """)
+
+                // 3. Drop old table
+                db.execSQL("DROP TABLE `stock_transactions`")
+
+                // 4. Rename
+                db.execSQL("ALTER TABLE `stock_transactions_new` RENAME TO `stock_transactions`")
+
+                // 5. Recreate indices
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_stock_transactions_batch_id` ON `stock_transactions` (`batch_id`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_stock_transactions_product_id` ON `stock_transactions` (`product_id`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_stock_transactions_variant_id` ON `stock_transactions` (`variant_id`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_stock_transactions_timestamp` ON `stock_transactions` (`timestamp`)")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -108,8 +171,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "waterproofing_inventory_db"
                 )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
-                .fallbackToDestructiveMigration()
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .build()
                 INSTANCE = instance
                 instance

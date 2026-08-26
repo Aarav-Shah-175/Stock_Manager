@@ -13,19 +13,19 @@ import androidx.room.PrimaryKey
             entity = BatchEntity::class,
             parentColumns = ["id"],
             childColumns = ["batch_id"],
-            onDelete = ForeignKey.RESTRICT
+            onDelete = ForeignKey.SET_NULL
         ),
         ForeignKey(
             entity = ProductEntity::class,
             parentColumns = ["id"],
             childColumns = ["product_id"],
-            onDelete = ForeignKey.RESTRICT
+            onDelete = ForeignKey.SET_NULL
         ),
         ForeignKey(
             entity = VariantEntity::class,
             parentColumns = ["id"],
             childColumns = ["variant_id"],
-            onDelete = ForeignKey.RESTRICT
+            onDelete = ForeignKey.SET_NULL
         )
     ],
     indices = [
@@ -39,11 +39,17 @@ data class StockTransactionEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     @ColumnInfo(name = "batch_id")
-    val batchId: Long,
+    val batchId: Long? = null,
     @ColumnInfo(name = "product_id")
-    val productId: Long,
+    val productId: Long? = null,
     @ColumnInfo(name = "variant_id")
-    val variantId: Long,
+    val variantId: Long? = null,
+    @ColumnInfo(name = "product_name")
+    val productName: String = "",
+    @ColumnInfo(name = "variant_name")
+    val variantName: String = "",
+    @ColumnInfo(name = "batch_number")
+    val batchNumber: String = "",
     @ColumnInfo(name = "transaction_type")
     val transactionType: String, // "IN", "OUT", "ADJUSTMENT"
     val quantity: Double,
