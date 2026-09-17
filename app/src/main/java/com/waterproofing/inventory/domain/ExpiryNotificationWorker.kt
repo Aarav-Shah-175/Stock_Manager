@@ -87,17 +87,18 @@ class ExpiryNotificationWorker(
 
         val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
         val firstBatch = batches.first()
-        val daysLeft = ((firstBatch.expiryDate - now) / TimeUnit.DAYS.toMillis(1)).coerceAtLeast(0)
+        val firstExp = firstBatch.expiryDate ?: now
+        val daysLeft = ((firstExp - now) / TimeUnit.DAYS.toMillis(1)).coerceAtLeast(0)
 
         val title = "Inventory Expiry Alert"
         val bodyText = if (batches.size == 1) {
             "${firstBatch.productName} — ${firstBatch.variantName}\n" +
-            "Expires ${sdf.format(Date(firstBatch.expiryDate))} ($daysLeft days left)\n" +
+            "Expires ${sdf.format(Date(firstExp))} ($daysLeft days left)\n" +
             "Stock: ${firstBatch.currentQuantity} ${firstBatch.unit}"
         } else {
             "${batches.size} batches expiring within $WARNING_DAYS days.\n" +
             "Earliest: ${firstBatch.productName} — ${firstBatch.variantName} " +
-            "(${sdf.format(Date(firstBatch.expiryDate))}, $daysLeft days)"
+            "(${sdf.format(Date(firstExp))}, $daysLeft days)"
         }
 
         val intent = Intent(context, MainActivity::class.java).apply {

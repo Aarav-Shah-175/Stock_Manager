@@ -120,6 +120,7 @@ interface StockTransactionDao {
                COALESCE(NULLIF(p.name, ''), NULLIF(t.product_name, '')) LIKE :nameQuery 
                OR COALESCE(NULLIF(v.name, ''), NULLIF(t.variant_name, '')) LIKE :nameQuery
                OR COALESCE(NULLIF(b.batch_number, ''), NULLIF(t.batch_number, '')) LIKE :nameQuery
+               OR t.notes LIKE :nameQuery
               )
           AND t.timestamp >= :fromTimestamp
           AND t.timestamp <= :toTimestamp

@@ -21,7 +21,7 @@ Product
 
 ## Tech Stack
 - Kotlin & Jetpack Compose
-- Room Database & SQLite **(DB version 4)**
+- Room Database & SQLite **(DB version 5)**
 - Navigation Compose (transitions disabled — instant navigation)
 - Kotlin Coroutines & Flow (StateFlow)
 - WorkManager (expiry notifications, 6-month transaction purge, automatic daily backup)
@@ -29,12 +29,12 @@ Product
 - Material 3 Design
 - Gradle Kotlin DSL (`.gradle.kts`)
 
-## Database Schema Notes (Version 4)
+## Database Schema Notes (Version 5)
 - `products` table: **Brand column removed** in migration v2→v3 (`MIGRATION_2_3`).
 - `variants` table: **SKU column removed** in migration v1→v2 (`MIGRATION_1_2`).
 - `stock_transactions` table: **Transaction Independence** added in migration v3→v4 (`MIGRATION_3_4`). Foreign keys set to `ON DELETE SET NULL` and snapshot columns (`product_name`, `variant_name`, `batch_number`) added so historical transactions survive deletion of products, variants, or batches.
-- `batches` table: Supplier/purchase/invoice columns exist in schema for backward compatibility but are not editable in UI.
-- Migration classes: `MIGRATION_1_2`, `MIGRATION_2_3`, `MIGRATION_3_4` in `AppDatabase.kt`.
+- `batches` table: **Nullable expiry_date** added in migration v4→v5 (`MIGRATION_4_5`) to support No Expiry / Never Expiry batches. Supplier/purchase/invoice columns exist in schema for backward compatibility but are not editable in UI.
+- Migration classes: `MIGRATION_1_2`, `MIGRATION_2_3`, `MIGRATION_3_4`, `MIGRATION_4_5` in `AppDatabase.kt`.
 
 ## Key Post-Completion Changes (2026-08-14)
 | Change | Files Affected |
@@ -47,6 +47,7 @@ Product
 | Automatic Daily Offline Backup | `AutoBackupWorker`, `BackupManager`, `SettingsRepository`, `SettingsViewModel`, `SettingsScreen`, `InventoryApplication` |
 | Add Variant Fix & Data Protection | `ProductDetailScreen.kt` (dialog validation), `AppDatabase.kt` (removed fallbackToDestructiveMigration) |
 | Historical Transaction Independence (DB v3→v4) | `StockTransactionEntity`, `StockTransactionDao`, `ProductDao`, `VariantDao`, `BatchDao`, `StockViewModel`, `AppDatabase` (MIGRATION_3_4) |
+| No Expiry / Never Support (DB v4→v5) | `BatchEntity`, `BatchWithProductInfo`, `BatchDao`, `ExpiryCalculator`, `VariantViewModel`, `VariantDetailScreen`, `RemoveStockScreen`, `AddStockScreen`, `DashboardScreen`, `ExpiryManagementScreen`, `AppDatabase` (MIGRATION_4_5) |
 
 ## How to Build and Run
 1. Open the project in Android Studio (Giraffe/Hedgehog or newer).

@@ -72,6 +72,13 @@ Post-Completion Changes       COMPLETE (2026-08-14)
 - Updated `StockTransactionDao` queries to use `LEFT JOIN` and `COALESCE` to seamlessly display snapshot product/variant/batch details when parent inventory items are deleted.
 - Created `MIGRATION_3_4` in `AppDatabase.kt` to safely migrate DB version 3 to 4, populating snapshot columns for existing transaction history from existing products, variants, and batches without data loss.
 
+### 11. No Expiry / Never Expiry Support (DB Migration v4 → v5)
+- **Feature Implemented**: Added explicit support for non-expiring stock batches without fake dates (`01/01/9999`).
+- **Data Model & Schema**: `expiryDate` in `BatchEntity` and `BatchWithProductInfo` is now nullable (`Long? = null`). Created `MIGRATION_4_5` in `AppDatabase.kt` to update SQLite table schema cleanly while preserving all existing batch data.
+- **UI Form Options**: Added `No Expiry (Product does not expire)` checkbox to `BatchAddEditDialog`. When checked, shelf-life and expiry date pickers are hidden/disabled, displaying `"Never"`.
+- **Display & Formatting**: Displays `"Never"` consistently across `BatchCard`, `RemoveStockScreen`, `AddStockScreen`, `DashboardScreen`, and `ExpiryManagementScreen`.
+- **Sorting & Notifications**: `BatchDao` sorts non-expiring batches (`Never`) at the very end (`ORDER BY (CASE WHEN expiry_date IS NULL THEN 1 ELSE 0 END) ASC, expiry_date ASC`). Expiry status queries (`getExpiredBatchesFlow`, `getExpiringSoonBatchesFlow`, `ExpiryNotificationWorker`) ignore non-expiring batches.
+
 ## Build and Test Status
 - `assembleDebug`: SUCCESS
 - `./gradlew test`: SUCCESS (All unit tests passed)

@@ -272,7 +272,7 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Default.Folder,
                                 contentDescription = null,
@@ -439,7 +439,10 @@ fun SettingsScreen(
                     }
                 },
                 text = {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(
+                        modifier = Modifier.verticalScroll(rememberScrollState()),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         Text(
                             "Select Daily Backup Time",
                             style = MaterialTheme.typography.titleMedium,

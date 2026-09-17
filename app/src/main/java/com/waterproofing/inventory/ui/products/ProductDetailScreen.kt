@@ -1,6 +1,8 @@
 package com.waterproofing.inventory.ui.products
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.waterproofing.inventory.data.entity.VariantEntity
 import com.waterproofing.inventory.data.model.VariantWithStock
@@ -76,7 +79,7 @@ fun ProductDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(product?.name ?: "Product Details") },
+                title = { Text(product?.name ?: "Product Details", maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -303,7 +306,7 @@ fun VariantCardItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = variant.name,
                         style = MaterialTheme.typography.titleMedium,
@@ -337,7 +340,7 @@ fun VariantCardItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Total Stock: ${variant.totalStock} ${variant.unit}",
                         style = MaterialTheme.typography.bodyMedium,
@@ -392,7 +395,9 @@ fun VariantAddEditDialog(
         title = { Text(if (variant == null) "Add Variant" else "Edit Variant") },
         text = {
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 OutlinedTextField(

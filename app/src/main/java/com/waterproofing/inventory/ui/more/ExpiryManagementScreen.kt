@@ -124,8 +124,8 @@ private fun ExpiryBatchCard(batch: BatchWithProductInfo) {
             HorizontalDivider(color = accentColor.copy(alpha = 0.3f))
             Spacer(modifier = Modifier.height(8.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Batch: ${batch.batchNumber}", style = MaterialTheme.typography.bodySmall, color = contentColor)
-                Text("Expiry: ${sdf.format(Date(batch.expiryDate))}", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = accentColor)
+                Text("Batch: ${batch.batchNumber}", style = MaterialTheme.typography.bodySmall, color = contentColor, modifier = Modifier.weight(1f))
+                Text("Expiry: ${batch.expiryDate?.let { sdf.format(Date(it)) } ?: "Never"}", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = accentColor)
             }
             Text("Remaining Qty: ${batch.currentQuantity} ${batch.unit}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = contentColor)
             batch.supplier?.let {

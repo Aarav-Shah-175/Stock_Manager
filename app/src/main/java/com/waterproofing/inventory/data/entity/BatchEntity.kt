@@ -38,7 +38,7 @@ data class BatchEntity(
     @ColumnInfo(name = "shelf_life_unit")
     val shelfLifeUnit: String? = null,
     @ColumnInfo(name = "expiry_date")
-    val expiryDate: Long,
+    val expiryDate: Long? = null,
     @ColumnInfo(name = "purchase_price")
     val purchasePrice: Double? = null,
     val supplier: String? = null,

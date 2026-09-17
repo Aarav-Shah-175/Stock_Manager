@@ -5,6 +5,8 @@ import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Download
@@ -120,7 +122,8 @@ fun BackupRestoreScreen(onBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(24.dp),
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             // Info card
@@ -163,7 +166,7 @@ fun BackupRestoreScreen(onBack: () -> Unit) {
                         modifier = Modifier.size(32.dp),
                         tint = MaterialTheme.colorScheme.primary
                     )
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text("Export Backup", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Text(
                             "Save a timestamped .db backup file",
@@ -190,7 +193,7 @@ fun BackupRestoreScreen(onBack: () -> Unit) {
                         modifier = Modifier.size(32.dp),
                         tint = MaterialTheme.colorScheme.secondary
                     )
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text("Restore Backup", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Text(
                             "Replace current data from a .db backup file",

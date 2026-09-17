@@ -63,7 +63,7 @@ fun TransactionHistoryScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { viewModel.updateSearchQuery(it) },
-                placeholder = { Text("Search product or variant name...") },
+                placeholder = { Text("Search...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
@@ -305,9 +305,10 @@ fun TransactionCard(tx: StockTransactionWithDetails) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = tx.reason,
+                    text = "Note: ${if (tx.notes.isNullOrBlank()) "—" else tx.notes}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f)
                 )
                 Text(
                     text = sdf.format(Date(tx.timestamp)),

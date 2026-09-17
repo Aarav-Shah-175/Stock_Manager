@@ -22,10 +22,11 @@ Repositories (Data Abstraction / Operations)
 Room DAOs & SQLite Database
 ```
 
-## Database Schema and Relationships (DB Version 4)
+## Database Schema and Relationships (DB Version 5)
 
-### Core Architectural Invariant
-> **Historical transactions are independent records and must survive deletion of their associated Product, Variant, or Batch.**
+### Core Architectural Invariants
+1. **Historical transactions are independent records and must survive deletion of their associated Product, Variant, or Batch.**
+2. **Stock batches can be marked as non-expiring (No Expiry), represented safely as `expiry_date = NULL` without fake dates.**
 
 ### 1. Categories (`CategoryEntity`)
 - `id` (Long, Primary Key, Auto-increment)
@@ -65,7 +66,7 @@ Room DAOs & SQLite Database
 - `mfg_date` (Long?)
 - `shelf_life_value` (Int?)
 - `shelf_life_unit` (String?)
-- `expiry_date` (Long, Index)
+- `expiry_date` (Long?, Index - NULL represents No Expiry / Never)
 - `purchase_price` (Double?)
 - `supplier` (String?)
 - `invoice_number` (String?)
@@ -73,6 +74,8 @@ Room DAOs & SQLite Database
 - `is_depleted` (Boolean, Default: false)
 - `created_at` (Long)
 - `updated_at` (Long)
+
+*(Note: `expiry_date` made nullable in DB migration v4→v5)*
 
 ### 5. Stock Transactions (`StockTransactionEntity`)
 - `id` (Long, Primary Key, Auto-increment)

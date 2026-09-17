@@ -12,7 +12,7 @@ data class BatchWithProductInfo(
     val mfgDate: Long?,
     val shelfLifeValue: Int?,
     val shelfLifeUnit: String?,
-    val expiryDate: Long,
+    val expiryDate: Long?,
     val purchasePrice: Double?,
     val supplier: String?,
     val invoiceNumber: String?,

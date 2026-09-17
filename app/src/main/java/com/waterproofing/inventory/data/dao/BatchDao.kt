@@ -4,7 +4,6 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Transaction
 import androidx.room.Update
 import com.waterproofing.inventory.data.entity.BatchEntity
 import com.waterproofing.inventory.data.model.BatchWithProductInfo
@@ -39,7 +38,11 @@ interface BatchDao {
     """)
     fun getBatchWithProductInfoByIdFlow(id: Long): Flow<BatchWithProductInfo?>
 
-    @Query("SELECT * FROM batches WHERE variant_id = :variantId ORDER BY expiry_date ASC")
+    @Query("""
+        SELECT * FROM batches 
+        WHERE variant_id = :variantId 
+        ORDER BY (CASE WHEN expiry_date IS NULL THEN 1 ELSE 0 END) ASC, expiry_date ASC
+    """)
     fun getBatchesByVariantFlow(variantId: Long): Flow<List<BatchEntity>>
 
     @Query("""
@@ -54,7 +57,7 @@ interface BatchDao {
         JOIN variants v ON b.variant_id = v.id
         JOIN products p ON v.product_id = p.id
         WHERE b.variant_id = :variantId
-        ORDER BY b.expiry_date ASC
+        ORDER BY (CASE WHEN b.expiry_date IS NULL THEN 1 ELSE 0 END) ASC, b.expiry_date ASC
     """)
     fun getBatchesWithProductInfoByVariantFlow(variantId: Long): Flow<List<BatchWithProductInfo>>
 
@@ -69,7 +72,7 @@ interface BatchDao {
         FROM batches b
         JOIN variants v ON b.variant_id = v.id
         JOIN products p ON v.product_id = p.id
-        WHERE b.expiry_date < :now AND b.current_quantity > 0 AND p.is_archived = 0 AND v.is_archived = 0
+        WHERE b.expiry_date IS NOT NULL AND b.expiry_date < :now AND b.current_quantity > 0 AND p.is_archived = 0 AND v.is_archived = 0
         ORDER BY b.expiry_date ASC
     """)
     fun getExpiredBatchesFlow(now: Long): Flow<List<BatchWithProductInfo>>
@@ -85,7 +88,7 @@ interface BatchDao {
         FROM batches b
         JOIN variants v ON b.variant_id = v.id
         JOIN products p ON v.product_id = p.id
-        WHERE b.expiry_date >= :now AND b.expiry_date <= :threshold AND b.current_quantity > 0 AND p.is_archived = 0 AND v.is_archived = 0
+        WHERE b.expiry_date IS NOT NULL AND b.expiry_date >= :now AND b.expiry_date <= :threshold AND b.current_quantity > 0 AND p.is_archived = 0 AND v.is_archived = 0
         ORDER BY b.expiry_date ASC
     """)
     fun getExpiringSoonBatchesFlow(now: Long, threshold: Long): Flow<List<BatchWithProductInfo>>
@@ -104,7 +107,7 @@ interface BatchDao {
         FROM batches b
         JOIN variants v ON b.variant_id = v.id
         JOIN products p ON v.product_id = p.id
-        WHERE b.expiry_date < :now AND b.current_quantity > 0 AND p.is_archived = 0 AND v.is_archived = 0
+        WHERE b.expiry_date IS NOT NULL AND b.expiry_date < :now AND b.current_quantity > 0 AND p.is_archived = 0 AND v.is_archived = 0
     """)
     fun getExpiredBatchCountFlow(now: Long): Flow<Int>
 
@@ -113,7 +116,7 @@ interface BatchDao {
         FROM batches b
         JOIN variants v ON b.variant_id = v.id
         JOIN products p ON v.product_id = p.id
-        WHERE b.expiry_date >= :now AND b.expiry_date <= :threshold AND b.current_quantity > 0 AND p.is_archived = 0 AND v.is_archived = 0
+        WHERE b.expiry_date IS NOT NULL AND b.expiry_date >= :now AND b.expiry_date <= :threshold AND b.current_quantity > 0 AND p.is_archived = 0 AND v.is_archived = 0
     """)
     fun getExpiringSoonBatchCountFlow(now: Long, threshold: Long): Flow<Int>
 
@@ -129,7 +132,7 @@ interface BatchDao {
         FROM batches b
         JOIN variants v ON b.variant_id = v.id
         JOIN products p ON v.product_id = p.id
-        WHERE b.expiry_date >= :now AND b.expiry_date <= :threshold AND b.current_quantity > 0 AND p.is_archived = 0 AND v.is_archived = 0
+        WHERE b.expiry_date IS NOT NULL AND b.expiry_date >= :now AND b.expiry_date <= :threshold AND b.current_quantity > 0 AND p.is_archived = 0 AND v.is_archived = 0
         ORDER BY b.expiry_date ASC
     """)
     suspend fun getExpiringSoonBatchesOnce(now: Long, threshold: Long): List<BatchWithProductInfo>

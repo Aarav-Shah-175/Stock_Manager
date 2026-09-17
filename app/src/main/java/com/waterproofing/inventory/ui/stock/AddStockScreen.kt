@@ -34,7 +34,6 @@ fun AddStockScreen(
 
     var productSearchQuery by remember { mutableStateOf("") }
     var quantityStr by remember { mutableStateOf("") }
-    var reason by remember { mutableStateOf("Received") }
     var notes by remember { mutableStateOf("") }
 
     var productExpanded by remember { mutableStateOf(false) }
@@ -156,7 +155,7 @@ fun AddStockScreen(
             ExposedDropdownMenuBox(expanded = batchExpanded, onExpandedChange = { if (selectedVariant != null) batchExpanded = !batchExpanded }) {
                 OutlinedTextField(
                     readOnly = true,
-                    value = selectedBatch?.let { "${it.batchNumber} — ${sdf.format(Date(it.expiryDate))}" } ?: "Select Batch",
+                    value = selectedBatch?.let { "${it.batchNumber} — ${it.expiryDate?.let { exp -> sdf.format(Date(exp)) } ?: "Never"}" } ?: "Select Batch",
                     onValueChange = {},
                     label = { Text("Batch*") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = batchExpanded) },
@@ -166,7 +165,7 @@ fun AddStockScreen(
                 ExposedDropdownMenu(expanded = batchExpanded, onDismissRequest = { batchExpanded = false }) {
                     batches.forEach { batch ->
                         DropdownMenuItem(
-                            text = { Text("${batch.batchNumber} | Qty: ${batch.currentQuantity} | Exp: ${sdf.format(Date(batch.expiryDate))}") },
+                            text = { Text("${batch.batchNumber} | Qty: ${batch.currentQuantity} | Exp: ${batch.expiryDate?.let { exp -> sdf.format(Date(exp)) } ?: "Never"}") },
                             onClick = {
                                 selectedBatch = batch
                                 batchExpanded = false
@@ -186,14 +185,6 @@ fun AddStockScreen(
                 label = { Text("Quantity to Add*") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 suffix = { selectedVariant?.let { Text(it.unit) } },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = reason,
-                onValueChange = { reason = it },
-                label = { Text("Reason") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -229,7 +220,7 @@ fun AddStockScreen(
                                 productId = batch.productId,
                                 quantity = qty,
                                 unit = variant?.unit ?: batch.unit,
-                                reason = reason,
+                                reason = "Received",
                                 invoiceNumber = null,
                                 notes = notes
                             ) { result ->

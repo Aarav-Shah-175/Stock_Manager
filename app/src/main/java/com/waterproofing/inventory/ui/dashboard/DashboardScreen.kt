@@ -21,6 +21,8 @@ import com.waterproofing.inventory.data.model.StockTransactionWithDetails
 import java.text.SimpleDateFormat
 import java.util.*
 
+import androidx.compose.ui.text.style.TextOverflow
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
@@ -43,7 +45,7 @@ fun DashboardScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(dashboardTitle) },
+                title = { Text(dashboardTitle, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -244,7 +246,7 @@ private fun SectionHeader(title: String, actionLabel: String, onAction: () -> Un
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+        Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
         TextButton(onClick = onAction) { Text(actionLabel) }
     }
 }
@@ -308,7 +310,7 @@ private fun ExpiryAlertRow(batch: BatchWithProductInfo) {
                     color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
                 Text(
-                    "Batch ${batch.batchNumber} · Exp: ${sdf.format(Date(batch.expiryDate))} · Qty: ${batch.currentQuantity} ${batch.unit}",
+                    "Batch ${batch.batchNumber} · Exp: ${batch.expiryDate?.let { sdf.format(Date(it)) } ?: "Never"} · Qty: ${batch.currentQuantity} ${batch.unit}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
@@ -346,7 +348,7 @@ private fun RecentTransactionRow(tx: StockTransactionWithDetails) {
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    tx.reason,
+                    "Note: ${if (tx.notes.isNullOrBlank()) "—" else tx.notes}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.outline
                 )

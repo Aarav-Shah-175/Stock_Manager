@@ -26,7 +26,7 @@ import com.waterproofing.inventory.data.entity.VariantEntity
         StockTransactionEntity::class,
         AppSettingsEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -164,6 +164,42 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** v4 → v5: Make expiry_date nullable in batches table to support No Expiry / Never Expiry batches. */
+        private val MIGRATION_4_5 = object : androidx.room.migration.Migration(4, 5) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `batches_new` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `variant_id` INTEGER NOT NULL,
+                        `batch_number` TEXT NOT NULL,
+                        `current_quantity` REAL NOT NULL,
+                        `mfg_date` INTEGER,
+                        `shelf_life_value` INTEGER,
+                        `shelf_life_unit` TEXT,
+                        `expiry_date` INTEGER,
+                        `purchase_price` REAL,
+                        `supplier` TEXT,
+                        `invoice_number` TEXT,
+                        `notes` TEXT,
+                        `is_depleted` INTEGER NOT NULL DEFAULT 0,
+                        `created_at` INTEGER NOT NULL DEFAULT 0,
+                        `updated_at` INTEGER NOT NULL DEFAULT 0,
+                        FOREIGN KEY(`variant_id`) REFERENCES `variants`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                """)
+                db.execSQL("""
+                    INSERT INTO `batches_new` (`id`, `variant_id`, `batch_number`, `current_quantity`, `mfg_date`, `shelf_life_value`, `shelf_life_unit`, `expiry_date`, `purchase_price`, `supplier`, `invoice_number`, `notes`, `is_depleted`, `created_at`, `updated_at`)
+                    SELECT `id`, `variant_id`, `batch_number`, `current_quantity`, `mfg_date`, `shelf_life_value`, `shelf_life_unit`, `expiry_date`, `purchase_price`, `supplier`, `invoice_number`, `notes`, `is_depleted`, `created_at`, `updated_at`
+                    FROM `batches`
+                """)
+                db.execSQL("DROP TABLE `batches`")
+                db.execSQL("ALTER TABLE `batches_new` RENAME TO `batches`")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_batches_variant_id` ON `batches` (`variant_id`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_batches_batch_number` ON `batches` (`batch_number`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_batches_expiry_date` ON `batches` (`expiry_date`)")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -171,7 +207,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "waterproofing_inventory_db"
                 )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .build()
                 INSTANCE = instance
                 instance

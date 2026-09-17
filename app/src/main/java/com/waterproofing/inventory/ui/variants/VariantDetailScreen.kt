@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.waterproofing.inventory.data.model.BatchWithProductInfo
 import com.waterproofing.inventory.domain.ExpiryCalculator
@@ -49,7 +50,7 @@ fun VariantDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(variant?.name ?: "Variant Details") },
+                title = { Text(variant?.name ?: "Variant Details", maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -161,7 +162,7 @@ fun VariantDetailScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(batches, key = { it.id }) { batch ->
-                        BatchCardItem(
+                        BatchCard(
                             batch = batch,
                             onEdit = { batchToEdit = batch },
                             onDelete = { batchToDelete = batch }
@@ -211,7 +212,7 @@ fun VariantDetailScreen(
             AlertDialog(
                 onDismissRequest = { showDeleteVariantDialog = false },
                 title = { Text("Delete Variant") },
-                text = { Text("Are you sure you want to delete this variant? All associated batches and transaction history for this variant will be permanently deleted.") },
+                text = { Text("Are you sure you want to delete this variant?") },
                 confirmButton = {
                     Button(
                         onClick = {
@@ -238,7 +239,7 @@ fun VariantDetailScreen(
             AlertDialog(
                 onDismissRequest = { batchToDelete = null },
                 title = { Text("Delete Batch") },
-                text = { Text("Are you sure you want to delete batch \"${batch.batchNumber}\"? All associated transactions for this batch will be permanently deleted.") },
+                text = { Text("Are you sure you want to delete batch \"${batch.batchNumber}\"?") },
                 confirmButton = {
                     Button(
                         onClick = {
@@ -261,7 +262,7 @@ fun VariantDetailScreen(
 }
 
 @Composable
-fun BatchCardItem(
+fun BatchCard(
     batch: BatchWithProductInfo,
     onEdit: () -> Unit,
     onDelete: () -> Unit
@@ -273,12 +274,14 @@ fun BatchCardItem(
         ExpiryStatus.EXPIRED -> MaterialTheme.colorScheme.error
         ExpiryStatus.EXPIRING_SOON -> MaterialTheme.colorScheme.tertiary
         ExpiryStatus.NORMAL -> MaterialTheme.colorScheme.primary
+        ExpiryStatus.NEVER -> MaterialTheme.colorScheme.outline
     }
 
     val statusText = when (expiryStatus) {
         ExpiryStatus.EXPIRED -> "EXPIRED"
         ExpiryStatus.EXPIRING_SOON -> "EXPIRING SOON"
         ExpiryStatus.NORMAL -> "NORMAL"
+        ExpiryStatus.NEVER -> "NEVER EXPIRES"
     }
 
     Card(
@@ -291,7 +294,7 @@ fun BatchCardItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Batch: ${batch.batchNumber}",
                         style = MaterialTheme.typography.titleMedium,
@@ -329,9 +332,9 @@ fun BatchCardItem(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Expiry: ${sdf.format(Date(batch.expiryDate))}",
+                        text = "Expiry: ${batch.expiryDate?.let { sdf.format(Date(it)) } ?: "Never"}",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = statusColor
@@ -363,30 +366,23 @@ fun BatchCardItem(
             // Advanced business details
             if (!batch.supplier.isNullOrEmpty() || batch.purchasePrice != null || !batch.invoiceNumber.isNullOrEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     batch.supplier?.let {
                         Text(
                             text = "Supplier: $it",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    batch.invoiceNumber?.let {
-                        Text(
-                            text = "Invoice #: $it",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.outline,
+                            modifier = Modifier.weight(1f)
                         )
                     }
                     batch.purchasePrice?.let {
                         Text(
                             text = "Price: ₹$it",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.outline
                         )
                     }
                 }
@@ -415,7 +411,7 @@ fun BatchAddEditDialog(
         mfgDate: Long?,
         shelfLifeValue: Int?,
         shelfLifeUnit: String?,
-        expiryDate: Long,
+        expiryDate: Long?,
         purchasePrice: Double?,
         supplier: String?,
         invoiceNumber: String?,
@@ -429,8 +425,9 @@ fun BatchAddEditDialog(
     var shelfLifeValueStr by remember { mutableStateOf(batch?.shelfLifeValue?.toString() ?: "") }
     var shelfLifeUnit by remember { mutableStateOf(batch?.shelfLifeUnit ?: "Months") }
 
+    var isNoExpiry by remember { mutableStateOf(batch != null && batch.expiryDate == null) }
     var expiryDate by remember { mutableStateOf(batch?.expiryDate ?: System.currentTimeMillis()) }
-    var isManualExpiry by remember { mutableStateOf(batch != null && batch.shelfLifeValue == null) }
+    var isManualExpiry by remember { mutableStateOf(batch != null && batch.shelfLifeValue == null && batch.expiryDate != null) }
 
     var notes by remember { mutableStateOf(batch?.notes ?: "") }
 
@@ -440,8 +437,8 @@ fun BatchAddEditDialog(
     var showExpPicker by remember { mutableStateOf(false) }
 
     // Automatic calculation when MFG date or shelf life changes
-    LaunchedEffect(mfgDate, shelfLifeValueStr, shelfLifeUnit, isManualExpiry) {
-        if (!isManualExpiry) {
+    LaunchedEffect(mfgDate, shelfLifeValueStr, shelfLifeUnit, isManualExpiry, isNoExpiry) {
+        if (!isNoExpiry && !isManualExpiry) {
             val mfg = mfgDate
             val value = shelfLifeValueStr.toIntOrNull()
             if (mfg != null && value != null && value > 0) {
@@ -477,108 +474,136 @@ fun BatchAddEditDialog(
                     fontWeight = FontWeight.Bold
                 )
 
+                // No Expiry Checkbox
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Checkbox(
-                        checked = isManualExpiry,
-                        onCheckedChange = { isManualExpiry = it }
+                        checked = isNoExpiry,
+                        onCheckedChange = { 
+                            isNoExpiry = it 
+                            if (it) {
+                                isManualExpiry = false
+                            }
+                        }
                     )
-                    Text(text = "Specify Expiry Date manually")
+                    Text(text = "No Expiry")
                 }
 
-                // MFG Date picker
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    OutlinedTextField(
-                        value = mfgDate?.let { sdf.format(Date(it)) } ?: "Not Set",
-                        onValueChange = {},
-                        label = { Text("Manufacturing Date") },
-                        readOnly = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .clickable { showMfgPicker = true }
-                    )
-                }
-
-                if (!isManualExpiry) {
+                if (!isNoExpiry) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        OutlinedTextField(
-                            value = shelfLifeValueStr,
-                            onValueChange = { shelfLifeValueStr = it },
-                            label = { Text("Shelf Life Value") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            modifier = Modifier.weight(1f)
+                        Checkbox(
+                            checked = isManualExpiry,
+                            onCheckedChange = { isManualExpiry = it }
                         )
+                        Text(text = "Specify Expiry Date manually")
+                    }
 
-                        // Exposed dropdown for unit
-                        var dropdownExpanded by remember { mutableStateOf(false) }
-                        Box(modifier = Modifier.weight(1f)) {
+                    // MFG Date picker
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedTextField(
+                            value = mfgDate?.let { sdf.format(Date(it)) } ?: "Not Set",
+                            onValueChange = {},
+                            label = { Text("Manufacturing Date") },
+                            readOnly = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clickable { showMfgPicker = true }
+                        )
+                    }
+
+                    if (!isManualExpiry) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
                             OutlinedTextField(
-                                value = shelfLifeUnit,
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text("Unit") },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
-                                modifier = Modifier.fillMaxWidth()
+                                value = shelfLifeValueStr,
+                                onValueChange = { shelfLifeValueStr = it },
+                                label = { Text("Shelf Life Value") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                modifier = Modifier.weight(1f)
                             )
-                            Box(
-                                modifier = Modifier
-                                    .matchParentSize()
-                                    .clickable { dropdownExpanded = true }
-                            )
-                            DropdownMenu(
-                                expanded = dropdownExpanded,
-                                onDismissRequest = { dropdownExpanded = false }
-                            ) {
-                                listOf("Days", "Months", "Years").forEach { unit ->
-                                    DropdownMenuItem(
-                                        text = { Text(unit) },
-                                        onClick = {
-                                            shelfLifeUnit = unit
-                                            dropdownExpanded = false
-                                        }
-                                    )
+
+                            // Exposed dropdown for unit
+                            var dropdownExpanded by remember { mutableStateOf(false) }
+                            Box(modifier = Modifier.weight(1f)) {
+                                OutlinedTextField(
+                                    value = shelfLifeUnit,
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text("Unit") },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .clickable { dropdownExpanded = true }
+                                )
+                                DropdownMenu(
+                                    expanded = dropdownExpanded,
+                                    onDismissRequest = { dropdownExpanded = false }
+                                ) {
+                                    listOf("Days", "Months", "Years").forEach { unit ->
+                                        DropdownMenuItem(
+                                            text = { Text(unit) },
+                                            onClick = {
+                                                shelfLifeUnit = unit
+                                                dropdownExpanded = false
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
-                // Expiry Date picker
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    OutlinedTextField(
-                        value = sdf.format(Date(expiryDate)),
-                        onValueChange = {},
-                        label = { Text("Expiry Date*") },
-                        readOnly = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
-                        ),
-                        enabled = isManualExpiry
-                    )
-                    if (isManualExpiry) {
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clickable { showExpPicker = true }
+                    // Expiry Date picker
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedTextField(
+                            value = sdf.format(Date(expiryDate)),
+                            onValueChange = {},
+                            label = { Text("Expiry Date*") },
+                            readOnly = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                            ),
+                            enabled = isManualExpiry
+                        )
+                        if (isManualExpiry) {
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .clickable { showExpPicker = true }
+                            )
+                        }
+                    }
+
+                    if (!isManualExpiry && mfgDate != null && shelfLifeValueStr.toIntOrNull() != null) {
+                        Text(
+                            text = "Calculated automatically from Manufacturing Date & Shelf Life.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
-                }
-
-                if (!isManualExpiry && mfgDate != null && shelfLifeValueStr.toIntOrNull() != null) {
-                    Text(
-                        text = "Calculated automatically from Manufacturing Date & Shelf Life.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary
+                } else {
+                    OutlinedTextField(
+                        value = "Never",
+                        onValueChange = {},
+                        label = { Text("Expiry Status") },
+                        readOnly = true,
+                        enabled = false,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
 
@@ -603,9 +628,9 @@ fun BatchAddEditDialog(
                             batchNumber,
                             qty,
                             mfgDate,
-                            if (isManualExpiry) null else slVal,
-                            if (isManualExpiry) null else shelfLifeUnit,
-                            expiryDate,
+                            if (isNoExpiry || isManualExpiry) null else slVal,
+                            if (isNoExpiry || isManualExpiry) null else shelfLifeUnit,
+                            if (isNoExpiry) null else expiryDate,
                             batch?.purchasePrice,
                             batch?.supplier,
                             batch?.invoiceNumber,

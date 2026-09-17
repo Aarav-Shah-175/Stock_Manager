@@ -29,8 +29,10 @@ object ExpiryCalculator {
 
     /**
      * Returns the expiry status based on now and the warning threshold (in days).
+     * Returns ExpiryStatus.NEVER for null expiry dates (non-expiring batches).
      */
-    fun getStatus(expiryEpochMs: Long, warningDays: Int = 90): ExpiryStatus {
+    fun getStatus(expiryEpochMs: Long?, warningDays: Int = 90): ExpiryStatus {
+        if (expiryEpochMs == null) return ExpiryStatus.NEVER
         val now = System.currentTimeMillis()
         val warningThreshold = now + warningDays * 86_400_000L
         return when {
@@ -41,4 +43,4 @@ object ExpiryCalculator {
     }
 }
 
-enum class ExpiryStatus { EXPIRED, EXPIRING_SOON, NORMAL }
+enum class ExpiryStatus { EXPIRED, EXPIRING_SOON, NORMAL, NEVER }

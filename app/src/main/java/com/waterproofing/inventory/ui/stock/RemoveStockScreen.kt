@@ -39,7 +39,6 @@ fun RemoveStockScreen(
 
     var productSearchQuery by remember { mutableStateOf("") }
     var quantityStr by remember { mutableStateOf("") }
-    var reason by remember { mutableStateOf("Issued") }
     var customerProject by remember { mutableStateOf("") }
     var invoiceNumber by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
@@ -183,7 +182,7 @@ fun RemoveStockScreen(
                 ExposedDropdownMenuBox(expanded = batchExpanded, onExpandedChange = { batchExpanded = !batchExpanded }) {
                     OutlinedTextField(
                         readOnly = true,
-                        value = selectedBatch?.let { "${it.batchNumber} | Qty: ${it.currentQuantity} | Exp: ${sdf.format(Date(it.expiryDate))}" } ?: "No batch selected",
+                        value = selectedBatch?.let { "${it.batchNumber} | Qty: ${it.currentQuantity} | Exp: ${it.expiryDate?.let { exp -> sdf.format(Date(exp)) } ?: "Never"}" } ?: "No batch selected",
                         onValueChange = {},
                         label = { Text("Selected Batch") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = batchExpanded) },
@@ -200,11 +199,11 @@ fun RemoveStockScreen(
                                     ) {
                                         Text("${batch.batchNumber} | Qty: ${batch.currentQuantity}")
                                         Text(
-                                            sdf.format(Date(batch.expiryDate)),
+                                            batch.expiryDate?.let { sdf.format(Date(it)) } ?: "Never",
                                             color = when (status) {
                                                 ExpiryStatus.EXPIRED -> MaterialTheme.colorScheme.error
                                                 ExpiryStatus.EXPIRING_SOON -> MaterialTheme.colorScheme.tertiary
-                                                ExpiryStatus.NORMAL -> MaterialTheme.colorScheme.primary
+                                                ExpiryStatus.NORMAL, ExpiryStatus.NEVER -> MaterialTheme.colorScheme.primary
                                             }
                                         )
                                     }
@@ -221,7 +220,7 @@ fun RemoveStockScreen(
                 // Expiry warning
                 selectedBatch?.let { batch ->
                     val status = ExpiryCalculator.getStatus(batch.expiryDate)
-                    if (status != ExpiryStatus.NORMAL) {
+                    if (status == ExpiryStatus.EXPIRED || status == ExpiryStatus.EXPIRING_SOON) {
                         Surface(
                             color = if (status == ExpiryStatus.EXPIRED)
                                 MaterialTheme.colorScheme.errorContainer
@@ -237,9 +236,9 @@ fun RemoveStockScreen(
                                 Icon(Icons.Default.Warning, contentDescription = null)
                                 Text(
                                     if (status == ExpiryStatus.EXPIRED)
-                                        "Warning: This batch is EXPIRED (${sdf.format(Date(batch.expiryDate))})"
+                                        "Warning: This batch is EXPIRED (${batch.expiryDate?.let { sdf.format(Date(it)) } ?: "Never"})"
                                     else
-                                        "This batch is expiring soon (${sdf.format(Date(batch.expiryDate))})",
+                                        "This batch is expiring soon (${batch.expiryDate?.let { sdf.format(Date(it)) } ?: "Never"})",
                                     style = MaterialTheme.typography.bodySmall
                                 )
                             }
@@ -262,30 +261,6 @@ fun RemoveStockScreen(
                 modifier = Modifier.fillMaxWidth(),
                 supportingText = selectedBatch?.let { { Text("Available: ${it.currentQuantity}") } }
             )
-
-            OutlinedTextField(
-                value = reason,
-                onValueChange = { reason = it },
-                label = { Text("Reason") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-        /*    OutlinedTextField(
-                value = customerProject,
-                onValueChange = { customerProject = it },
-                label = { Text("Customer / Project (Optional)") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = invoiceNumber,
-                onValueChange = { invoiceNumber = it },
-                label = { Text("Invoice Number (Optional)") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            ) */
 
             OutlinedTextField(
                 value = notes,
@@ -318,7 +293,7 @@ fun RemoveStockScreen(
                                 productId = batch.productId,
                                 quantity = qty,
                                 unit = variant?.unit ?: batch.unit,
-                                reason = reason,
+                                reason = "Issued",
                                 customerProject = customerProject,
                                 invoiceNumber = invoiceNumber,
                                 notes = notes
@@ -327,8 +302,6 @@ fun RemoveStockScreen(
                                     is StockOperationResult.Success -> {
                                         successMessage = "✓ Stock issued successfully."
                                         quantityStr = ""
-                                        customerProject = ""
-                                        invoiceNumber = ""
                                         notes = ""
                                         // Reset FEFO suggestion
                                         selectedBatch = null
