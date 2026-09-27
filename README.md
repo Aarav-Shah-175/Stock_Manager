@@ -1,6 +1,6 @@
-# Stock Manager — Construction Chemical Inventory App
+# Stock Manager — Retail Inventory App
 
-An offline-first Android application designed for managing stock, variants, batches, and transactions for waterproofing and construction chemical businesses.
+An offline-first Android application designed for managing stock, variants, batches, and transactions for retail businesses.
 
 ---
 
